@@ -14,9 +14,10 @@
 #include "types.h"
 #include "macros.h"
 
-#define N 20
+#define N 100
 #define K 2
 #define SEED 1
+#define LIMIT 10
 #define E (K * N - (K * (K + 1)) / 2)
 #define C CEILBPC(MAX(N, E))
 

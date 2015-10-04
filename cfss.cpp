@@ -2,7 +2,7 @@
 
 size_t count;
 struct timeval t1, t2;
-value min, bou;
+value min;
 stack sol;
 bool stop;
 
@@ -232,13 +232,21 @@ void cfss(stack *st) {
 	//printcs(st);
 	register value cur = csvalue(st);
 	if (cur < min) { min = cur; sol = *st; }
-	if (bound(st) > min) return;
+
+	#ifdef LIMIT
+	if (!stop) {
+		gettimeofday(&t2, NULL);
+		if ((double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec > LIMIT) stop = true;
+	}
+	#endif
+
+	if (stop || bound(st) > min) return;
 
 	chunk tmp[C];
 	memcpy(tmp, st->c, sizeof(chunk) * C);
 	register edge popc = MASKPOPCNT(tmp, C);
 
-	for (edge i = 0, e = MASKFFS(tmp, C); i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C)) {
+	for (edge i = 0, e = MASKFFS(tmp, C); !stop && i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C)) {
 
 		register agent v1 = X(st->a, e);
 		register agent v2 = Y(st->a, e);
@@ -319,6 +327,9 @@ int main(int argc, char *argv[]) {
 
 	value in = min = csvalue(st);
 	sol = *st;
+	#ifdef LIMIT
+	value bou = bound(st);
+	#endif
 
 	gettimeofday(&t1, NULL);
 	cfss(st);
@@ -326,8 +337,13 @@ int main(int argc, char *argv[]) {
 	free(st);
 
 	//printcs(&sol);
+	#ifdef LIMIT
+	printf("%u,%u,%u,%f,%f,%f,%f,%f,%f,%zu\n", N, E, SEED, in, min, bou, (in - min) / in, min / bou,
+	       (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
+	#else
 	printf("%u,%u,%u,%f,%f,%f,%f,%zu\n", N, E, SEED, in, min, (in - min) / in,
 	       (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
+	#endif
 
 	return 0;
 }
