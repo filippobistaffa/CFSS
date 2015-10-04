@@ -3,6 +3,7 @@
 void read(value *p, value *t, value *m) {
 
 	FILE *f = fopen(FILENAME, "rb");
+	if (!f) { puts("Error opening energy profiles"); exit(1); }
 	register size_t i, j;
 	register value v;
 	char line[LINE], val[WIDTH];

@@ -16,7 +16,7 @@
 
 #define N 20
 #define K 2
-//#define SEED 123
+#define SEED 1
 #define E (K * N - (K * (K + 1)) / 2)
 #define C CEILBPC(MAX(N, E))
 
