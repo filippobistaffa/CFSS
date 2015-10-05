@@ -24,7 +24,7 @@ inline value cvaluem(stack *st, agent i) {
 	return KAPPA(X(st->s, i));
 }
 
-// COALITION STRUCTURE VALUE FUNCTIONS
+// Total value of the coalition structure
 
 __attribute__((always_inline))
 inline value csvalue(stack *st) {
@@ -71,7 +71,7 @@ inline value csvaluem(stack *st) {
 	return tot;
 }
 
-// CONTRACT EDGE
+// Contract edge between v1 and v2
 
 __attribute__((always_inline)) inline
 void contract(stack *st, agent v1, agent v2) {
@@ -93,7 +93,7 @@ void contract(stack *st, agent v1, agent v2) {
 	while (--m);
 }
 
-// MERGE COALITIONS
+// Merge coalitions of v1 and v2
 
 __attribute__((always_inline)) inline
 void merge(stack *st, agent v1, agent v2) {
@@ -132,7 +132,7 @@ void merge(stack *st, agent v1, agent v2) {
 	} while (--j);
 }
 
-// MERGE PROFILES
+// Merge profiles of v1 and v2
 
 __attribute__((always_inline))
 inline void mergeprof(stack *st, agent v1, agent v2) {
@@ -150,7 +150,7 @@ inline void mergeprof(stack *st, agent v1, agent v2) {
 	st->m[v1] = _mm_min_ps(b, _mm_shuffle_ps(b, b, _MM_SHUFFLE(1, 0, 3, 2)))[0];
 }
 
-// PRINT COALITION STRUCTURE
+// Print coalition structure
 
 void printcs(stack *st) {
 
@@ -169,7 +169,7 @@ void printcs(stack *st) {
 	puts("");
 }
 
-// CONTRACT ALL AVAILABLE EDGES
+// Contract all available edges
 
 __attribute__((always_inline)) inline
 void connect(stack *st) {
@@ -266,6 +266,7 @@ inline void createedge(edge *g, agent *a, agent v1, agent v2, edge e) {
 	Y(a, e) = v2;
 }
 
+#ifndef TWITTER
 void scalefree(edge *g, agent *a) {
 
 	unsigned deg[N] = {0};
@@ -302,6 +303,7 @@ void scalefree(edge *g, agent *a) {
 		}
 	}
 }
+#endif
 
 int main(int argc, char *argv[]) {
 
@@ -320,8 +322,18 @@ int main(int argc, char *argv[]) {
 	ONES(st->c, E + 1, C);
 	CLEAR(st->c, 0);
 
+	// Initialise graph
+
+	#ifdef TWITTER
+	memcpy(st->g, g, sizeof(edge) * N * N);
+	memcpy(st->a, a, sizeof(agent) * 2 * (E + 1));
+	#else
 	init(SEED);
 	scalefree(st->g, st->a);
+	#endif
+
+	// Read energy profiles
+
 	init(SEED);
 	read(st->p, st->t, st->m);
 

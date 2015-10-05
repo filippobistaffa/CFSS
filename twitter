@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+if [ "$#" -eq 0 ]
+then
+	echo "Compiles CFSS using Twitter as graph"
+	echo "Usage: ./twitter N SEED EXENAME"
+	exit
+fi
+
+tmp=`mktemp`
+basename="net/twitter-2010"
+wg="wg"
+
+java -Xmx4000m -cp .:$wg/* ReduceGraph $basename $1 $2 > $tmp
+g++ -DTWITTER -Wall -march=native -Ofast -funroll-loops -funsafe-loop-optimizations -falign-functions=16 -falign-loops=16 -include types.h -include $tmp *.c *.cpp -lm -o $3
+rm $tmp
