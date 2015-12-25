@@ -2,7 +2,7 @@
 
 size_t count;
 struct timeval t1, t2;
-value min;
+value max;
 stack sol;
 
 // Contract edge between v1 and v2
@@ -121,7 +121,7 @@ void cfss(stack *st) {
 	count++;
 	//printcs(st);
 	register value cur = csvalue(st);
-	if (cur < min) { min = cur; sol = *st; }
+	if (cur > max) { max = cur; sol = *st; }
 
 	chunk tmp[C];
 	memcpy(tmp, st->c, sizeof(chunk) * C);
@@ -153,7 +153,7 @@ void scalefree(edge *g, agent *a) {
 	register uint_fast64_t d, i, j, h, k = 1, q, t = 0;
 	register int p;
 
-	for (i = 1; i <= K; i++) {
+	for (i = 1; i <= M; i++) {
 		for (j = 0; j < i; j++) {
 			createedge(g, a, i, j, k++);
 			deg[i]++;
@@ -161,9 +161,9 @@ void scalefree(edge *g, agent *a) {
 		}
 	}
 
-	for (i = K + 1; i < N; i++) {
+	for (i = M + 1; i < N; i++) {
 		t &= ~((1ULL << i) - 1);
-		for (j = 0; j < K; j++) {
+		for (j = 0; j < M; j++) {
 			d = 0;
 			for (h = 0; h < i; h++)
 				if (!((t >> h) & 1)) d += deg[h];
@@ -212,7 +212,9 @@ int main(int argc, char *argv[]) {
 	scalefree(st->g, st->a);
 	#endif
 
-	value in = min = csvalue(st);
+	st->hash = NULL;
+	enumerate(st->a, &(st->hash));
+	value in = max = csvalue(st);
 	sol = *st;
 
 	gettimeofday(&t1, NULL);
@@ -220,8 +222,15 @@ int main(int argc, char *argv[]) {
 	gettimeofday(&t2, NULL);
 	free(st);
 
+	// Free hash table contents
+	var *tmp, *p;
+	HASH_ITER(hh, st->hash, p, tmp) {
+		HASH_DELETE(hh, st->hash, p);
+		free(p);
+	}
+
 	//printcs(&sol);
-	printf("%u,%u,%u,%f,%f,%f,%f,%zu\n", N, E, SEED, in, min, (in - min) / in,
+	printf("%u,%u,%u,%f,%f,%f,%f,%zu\n", N, E, SEED, in, max, (in - max) / in,
 	       (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
 
 	return 0;
