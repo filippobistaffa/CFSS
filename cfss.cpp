@@ -212,10 +212,14 @@ int main(int argc, char *argv[]) {
 	scalefree(st->g, st->a);
 	#endif
 
+	// Put coalitional values in hash table
+
 	st->hash = NULL;
 	enumerate(st->a, &(st->hash));
 	value in = max = csvalue(st);
 	sol = *st;
+
+	// Solve
 
 	gettimeofday(&t1, NULL);
 	cfss(st);
