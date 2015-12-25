@@ -227,6 +227,7 @@ int main(int argc, char *argv[]) {
 	free(st);
 
 	// Free hash table contents
+
 	var *tmp, *p;
 	HASH_ITER(hh, st->hash, p, tmp) {
 		HASH_DELETE(hh, st->hash, p);
