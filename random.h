@@ -8,6 +8,8 @@
 void init(long long s);
 int next(int bits);
 int nextInt(int n);
+float nextFloat(); // [0..1)
+double nextDouble(); // [0..1)
 // nextInt() == next(32)
 
 #endif /* RANDOM_H_ */

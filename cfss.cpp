@@ -4,74 +4,8 @@ size_t count;
 struct timeval t1, t2;
 value min;
 stack sol;
-bool stop;
 
-// F+
-
-__attribute__((always_inline))
-inline value cvaluep(stack *st, agent i) {
-
-	register value a = st->m[i] * TS;
-	register value b = st->t[i] - a;
-	return b * DAYAHEAD + a * FORWARD;
-}
-
-// F-
-
-__attribute__((always_inline))
-inline value cvaluem(stack *st, agent i) {
-
-	return KAPPA(X(st->s, i));
-}
-
-// COALITION STRUCTURE VALUE FUNCTIONS
-
-__attribute__((always_inline))
-inline value csvalue(stack *st) {
-
-	register const agent *p = st->n + N + 1;
-	register agent i, m = st->n[N];
-	register value tot = 0;
-
-	do {
-		i = *(p++);
-		tot += cvaluep(st, i) + cvaluem(st, i);
-	} while (--m);
-
-	return tot;
-}
-
-__attribute__((always_inline))
-inline value csvaluep(stack *st) {
-
-	register const agent *p = st->n + N + 1;
-	register agent i, m = st->n[N];
-	register value tot = 0;
-
-	do {
-		i = *(p++);
-		tot += cvaluep(st, i);
-	} while (--m);
-
-	return tot;
-}
-
-__attribute__((always_inline))
-inline value csvaluem(stack *st) {
-
-	register const agent *p = st->n + N + 1;
-	register agent i, m = st->n[N];
-	register value tot = 0;
-
-	do {
-		i = *(p++);
-		tot += cvaluem(st, i);
-	} while (--m);
-
-	return tot;
-}
-
-// CONTRACT EDGE
+// Contract edge between v1 and v2
 
 __attribute__((always_inline)) inline
 void contract(stack *st, agent v1, agent v2) {
@@ -93,7 +27,7 @@ void contract(stack *st, agent v1, agent v2) {
 	while (--m);
 }
 
-// MERGE COALITIONS
+// Merge coalitions of v1 and v2
 
 __attribute__((always_inline)) inline
 void merge(stack *st, agent v1, agent v2) {
@@ -132,25 +66,38 @@ void merge(stack *st, agent v1, agent v2) {
 	} while (--j);
 }
 
-// MERGE PROFILES
+// Value of the coalition
 
-__attribute__((always_inline))
-inline void mergeprof(stack *st, agent v1, agent v2) {
+__attribute__((always_inline)) inline
+value cvalue(const stack *st, agent i) {
 
-	register __m128 a, b = _mm_set1_ps(FLT_MAX);
-	st->t[v1] += st->t[v2];
-
-	for (unsigned i = 0; i < TS; i += 4) {
-		a = _mm_add_ps(_mm_load_ps(st->p + v1 * TS + i), _mm_load_ps(st->p + v2 * TS + i));
-		b = _mm_min_ps(a, b);
-		_mm_store_ps(st->p + v1 * TS + i, a);
-	}
-
-	b = _mm_min_ps(b, _mm_shuffle_ps(b, b, _MM_SHUFFLE(2, 1, 0, 3)));
-	st->m[v1] = _mm_min_ps(b, _mm_shuffle_ps(b, b, _MM_SHUFFLE(1, 0, 3, 2)))[0];
+	register var *t;
+	agent tc[K + 1] = { 0 };
+	tc[0] = X(st->s, i);
+	memcpy(tc + 1, st->cs + Y(st->s, i), sizeof(agent) * (*tc));
+	QSORT(agent, tc + 1, *tc, LT);
+	HASH_FIND(hh, st->hash, tc, sizeof(agent) * (K + 1), t);
+	return t->v;
 }
 
-// PRINT COALITION STRUCTURE
+// Total value of the coalition structure
+
+__attribute__((always_inline))
+inline value csvalue(stack *st) {
+
+	register const agent *p = st->n + N + 1;
+	register agent i, m = st->n[N];
+	register value tot = 0;
+
+	do {
+		i = *(p++);
+		tot += cvalue(st, i);
+	} while (--m);
+
+	return tot;
+}
+
+// Print coalition structure
 
 void printcs(stack *st) {
 
@@ -163,67 +110,10 @@ void printcs(stack *st) {
                 for (agent j = 0; j < X(st->s, i); j++)
                 	printf("%s%u%s ", i == st->cs[Y(st->s, i) + j] ? "<" : "", 
 			       1 + st->cs[Y(st->s, i) + j], i == st->cs[Y(st->s, i) + j] ? ">" : "");
-                printf("} = %f\n", cvaluep(st, i) + cvaluem(st, i));
+                printf("} = %f\n", cvalue(st, i));
         } while (--m);
 
 	puts("");
-}
-
-// CONTRACT ALL AVAILABLE EDGES
-
-__attribute__((always_inline)) inline
-void connect(stack *st) {
-
-	register agent m = st->n[N];
-	register const agent *p = st->n + N + 1;
-	register agent *q = (agent *)malloc(sizeof(agent) * N);
-	register agent *l = (agent *)malloc(sizeof(agent) * N * N);
-	register agent *h = (agent *)calloc(N, sizeof(agent));
-	register edge popc = MASKPOPCNT(st->c, C);
-
-	for (edge i = 0, e = MASKFFS(st->c, C); i < popc; i++, e = MASKCLEARANDFFS(st->c, e, C)) {
-		agent v1 = X(st->a, e);
-		agent v2 = l[v1 * N + h[v1]++] = Y(st->a, e);
-		l[v2 * N + h[v2]++] = v1;
-	}
-
-	do {
-		edge e = 1, f = 0;
-		agent i = *(p++);
-		q[f] = i;
-
-		do {
-			for (agent j = 0; j < h[q[f]]; j++) {
-				agent b = l[q[f] * N + j];
-				if (i != b && CONTAINS(st->n, b)) {
-					//
-					merge(st, i, b);
-					mergeprof(st, i, b);
-					//
-					q[e++] = b;
-					m--;
-				}
-			}
-			f++;
-		}
-		while (f != e);
-	} while (--m);
-
-	free(q);
-	free(l);
-	free(h);
-}
-
-__attribute__((always_inline)) inline
-value bound(stack *st) {
-
-	register stack *cst = (stack *)malloc(sizeof(stack));
-	*cst = *st;
-	connect(cst);
-	//printcs(cst);
-	register value vcst = csvaluep(cst);
-	free(cst);
-	return vcst + csvaluem(st);
 }
 
 void cfss(stack *st) {
@@ -233,27 +123,17 @@ void cfss(stack *st) {
 	register value cur = csvalue(st);
 	if (cur < min) { min = cur; sol = *st; }
 
-	#ifdef LIMIT
-	if (!stop) {
-		gettimeofday(&t2, NULL);
-		if ((double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec > LIMIT) stop = true;
-	}
-	#endif
-
-	if (stop || bound(st) > min) return;
-
 	chunk tmp[C];
 	memcpy(tmp, st->c, sizeof(chunk) * C);
 	register edge popc = MASKPOPCNT(tmp, C);
 
-	for (edge i = 0, e = MASKFFS(tmp, C); !stop && i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C)) {
+	for (edge i = 0, e = MASKFFS(tmp, C); i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C)) {
 
 		register agent v1 = X(st->a, e);
 		register agent v2 = Y(st->a, e);
 		CLEAR(st->c, st->g[v1 * N + v2]);
 		st[1] = st[0];
 		merge(st + 1, v1, v2);
-		mergeprof(st + 1, v1, v2);
 		contract(st + 1, v1, v2);
 		cfss(st + 1);
 	}
@@ -266,6 +146,7 @@ inline void createedge(edge *g, agent *a, agent v1, agent v2, edge e) {
 	Y(a, e) = v2;
 }
 
+#ifndef TWITTER
 void scalefree(edge *g, agent *a) {
 
 	unsigned deg[N] = {0};
@@ -302,6 +183,7 @@ void scalefree(edge *g, agent *a) {
 		}
 	}
 }
+#endif
 
 int main(int argc, char *argv[]) {
 
@@ -320,16 +202,18 @@ int main(int argc, char *argv[]) {
 	ONES(st->c, E + 1, C);
 	CLEAR(st->c, 0);
 
+	// Initialise graph
+
+	#ifdef TWITTER
+	memcpy(st->g, g, sizeof(edge) * N * N);
+	memcpy(st->a, a, sizeof(agent) * 2 * (E + 1));
+	#else
 	init(SEED);
 	scalefree(st->g, st->a);
-	init(SEED);
-	read(st->p, st->t, st->m);
+	#endif
 
 	value in = min = csvalue(st);
 	sol = *st;
-	#ifdef LIMIT
-	value bou = bound(st);
-	#endif
 
 	gettimeofday(&t1, NULL);
 	cfss(st);
@@ -337,13 +221,8 @@ int main(int argc, char *argv[]) {
 	free(st);
 
 	//printcs(&sol);
-	#ifdef LIMIT
-	printf("%u,%u,%u,%f,%f,%f,%f,%f,%f,%zu\n", N, E, SEED, in, min, bou, (in - min) / in, min / bou,
-	       (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
-	#else
 	printf("%u,%u,%u,%f,%f,%f,%f,%zu\n", N, E, SEED, in, min, (in - min) / in,
 	       (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
-	#endif
 
 	return 0;
 }

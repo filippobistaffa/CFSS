@@ -7,6 +7,9 @@
 #define X(V, I) ((V)[2 * (I)])
 #define Y(V, I) ((V)[2 * (I) + 1])
 
+#define LT(_a, _b) (*(_a)) < (*(_b))
+#define LE(_a, _b) (*(_a)) <= (*(_b))
+
 #define DIVBPC(X) ((X) / BITSPERCHUNK)
 #define MODBPC(X) ((X) % BITSPERCHUNK)
 #define CEILBPC(X) CEIL(X, BITSPERCHUNK)

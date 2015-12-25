@@ -28,3 +28,13 @@ int nextInt(int n) {
 
 	return val;
 }
+
+float nextFloat() {
+
+	return next(24) / (float) (1 << 24);
+}
+
+double nextDouble() {
+
+	return (((long) next(26) << 27) + next(27)) / (double) (1L << 53);
+}
