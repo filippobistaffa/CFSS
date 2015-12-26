@@ -86,11 +86,11 @@ __attribute__((always_inline))
 inline value csvalue(stack *st) {
 
 	register const agent *p = st->n + N + 1;
-	register agent i, m = st->n[N];
+	register agent m = st->n[N];
 	register value tot = 0;
 
 	do {
-		i = *(p++);
+		register agent i = *(p++);
 		tot += cvalue(st, i);
 	} while (--m);
 
@@ -102,10 +102,10 @@ inline value csvalue(stack *st) {
 void printcs(stack *st) {
 
 	register const agent *p = st->n + N + 1;
-        register agent i, m = st->n[N];
+        register agent m = st->n[N];
 
 	do {
-		i = *(p++);
+		register agent i = *(p++);
                 printf("{ ");
                 for (agent j = 0; j < X(st->s, i); j++)
                 	printf("%s%u%s ", i == st->cs[Y(st->s, i) + j] ? "<" : "", 
