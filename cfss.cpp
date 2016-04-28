@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
 	// Put coalitional values in hash table
 
 	st->hash = NULL;
-	enumerate(st->a, &(st->hash));
+	printf("%zu coalitions\n", enumerate(st->a, &(st->hash)));
 	value in = max = csvalue(st);
 	sol = *st;
 
