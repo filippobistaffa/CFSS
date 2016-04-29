@@ -192,15 +192,14 @@ void cfss(stack *st) {
 	}
 }
 
-inline void createedge(edge *g, agent *a, agent v1, agent v2, edge e) {
+inline void createedge(agent *a, agent v1, agent v2, edge e) {
 
-	g[v1 * N + v2] = g[v2 * N + v1] = e;
 	X(a, e) = v1;
 	Y(a, e) = v2;
 }
 
 #ifndef TWITTER
-void scalefree(edge *g, agent *a) {
+void scalefree(agent *a) {
 
 	unsigned deg[N] = {0};
 	register uint_fast64_t d, i, j, h, k = 1, q, t = 0;
@@ -208,7 +207,7 @@ void scalefree(edge *g, agent *a) {
 
 	for (i = 1; i <= K; i++) {
 		for (j = 0; j < i; j++) {
-			createedge(g, a, i, j, k++);
+			createedge(a, i, j, k++);
 			deg[i]++;
 			deg[j]++;
 		}
@@ -229,7 +228,7 @@ void scalefree(edge *g, agent *a) {
 				}
 				q--;
 				t |= 1ULL << q;
-				createedge(g, a, i, q, k++);
+				createedge(a, i, q, k++);
 				deg[i]++;
 				deg[q]++;
 			}
@@ -284,7 +283,7 @@ int main(int argc, char *argv[]) {
 	memcpy(st->a, a, sizeof(agent) * 2 * (E + 1));
 	#else
 	init(SEED);
-	scalefree(st->g, st->a);
+	scalefree(st->a);
 	#endif
 
 	// Read energy profiles
