@@ -11,9 +11,7 @@ bool stop;
 __attribute__((always_inline))
 inline value cvaluep(stack *st, agent i) {
 
-	register value a = st->m[i] * TS;
-	register value b = st->t[i] - a;
-	return b * DAYAHEAD + a * FORWARD;
+	return 0;
 }
 
 // F-
@@ -21,7 +19,7 @@ inline value cvaluep(stack *st, agent i) {
 __attribute__((always_inline))
 inline value cvaluem(stack *st, agent i) {
 
-	return KAPPA(X(st->s, i));
+	return 0;
 }
 
 // Total value of the coalition structure
@@ -132,24 +130,6 @@ void merge(stack *st, agent v1, agent v2) {
 	} while (--j);
 }
 
-// Merge profiles of v1 and v2
-
-__attribute__((always_inline))
-inline void mergeprof(stack *st, agent v1, agent v2) {
-
-	register __m128 a, b = _mm_set1_ps(FLT_MAX);
-	st->t[v1] += st->t[v2];
-
-	for (unsigned i = 0; i < TS; i += 4) {
-		a = _mm_add_ps(_mm_load_ps(st->p + v1 * TS + i), _mm_load_ps(st->p + v2 * TS + i));
-		b = _mm_min_ps(a, b);
-		_mm_store_ps(st->p + v1 * TS + i, a);
-	}
-
-	b = _mm_min_ps(b, _mm_shuffle_ps(b, b, _MM_SHUFFLE(2, 1, 0, 3)));
-	st->m[v1] = _mm_min_ps(b, _mm_shuffle_ps(b, b, _MM_SHUFFLE(1, 0, 3, 2)))[0];
-}
-
 // Print coalition structure
 
 void printcs(stack *st) {
@@ -169,57 +149,11 @@ void printcs(stack *st) {
 	puts("");
 }
 
-// Contract all available edges
-
-__attribute__((always_inline)) inline
-void connect(stack *st) {
-
-	register agent m = st->n[N];
-	register const agent *p = st->n + N + 1;
-	register agent *q = (agent *)malloc(sizeof(agent) * N);
-	register agent *l = (agent *)malloc(sizeof(agent) * N * N);
-	register agent *h = (agent *)calloc(N, sizeof(agent));
-	register edge popc = MASKPOPCNT(st->c, C);
-
-	for (edge i = 0, e = MASKFFS(st->c, C); i < popc; i++, e = MASKCLEARANDFFS(st->c, e, C)) {
-		agent v1 = X(st->a, e);
-		agent v2 = l[v1 * N + h[v1]++] = Y(st->a, e);
-		l[v2 * N + h[v2]++] = v1;
-	}
-
-	do {
-		edge e = 1, f = 0;
-		agent i = *(p++);
-		q[f] = i;
-
-		do {
-			for (agent j = 0; j < h[q[f]]; j++) {
-				agent b = l[q[f] * N + j];
-				if (i != b && CONTAINS(st->n, b)) {
-					//
-					merge(st, i, b);
-					mergeprof(st, i, b);
-					//
-					q[e++] = b;
-					m--;
-				}
-			}
-			f++;
-		}
-		while (f != e);
-	} while (--m);
-
-	free(q);
-	free(l);
-	free(h);
-}
-
 __attribute__((always_inline)) inline
 value bound(stack *st) {
 
 	register stack *cst = (stack *)malloc(sizeof(stack));
 	*cst = *st;
-	connect(cst);
 	//printcs(cst);
 	register value vcst = csvaluep(cst);
 	free(cst);
@@ -253,7 +187,6 @@ void cfss(stack *st) {
 		CLEAR(st->c, st->g[v1 * N + v2]);
 		st[1] = st[0];
 		merge(st + 1, v1, v2);
-		mergeprof(st + 1, v1, v2);
 		contract(st + 1, v1, v2);
 		cfss(st + 1);
 	}
@@ -333,9 +266,6 @@ int main(int argc, char *argv[]) {
 	#endif
 
 	// Read energy profiles
-
-	init(SEED);
-	read(st->p, st->t, st->m);
 
 	value in = min = csvalue(st);
 	sol = *st;
