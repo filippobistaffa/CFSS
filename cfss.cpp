@@ -238,6 +238,28 @@ void scalefree(edge *g, agent *a) {
 }
 #endif
 
+void reorderedges(agent *a, value *v) {
+
+	typedef struct { agent v1; agent v2; value v; } ev;
+	ev evb[E + 1];
+	edge i;
+
+	for (i = 1; i < E + 1; i++) {
+		evb[i].v = v[i];
+		evb[i].v1 = X(a, i);
+		evb[i].v2 = Y(a, i);
+	}
+
+	#define gtv(a, b) ((*(a)).v > (*(b)).v)
+	QSORT(ev, evb + 1, E, gtv);
+
+	#define gt(a, b) ((*(a)) > (*(b)))
+        QSORT(value, v + 1, E, gt);
+
+	for (i = 1; i < E + 1; i++)
+		createedge(a, evb[i].v1, evb[i].v2, i);
+}
+
 int main(int argc, char *argv[]) {
 
 	stack *st = (stack *)malloc(sizeof(stack) * N);

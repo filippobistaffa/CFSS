@@ -20,6 +20,7 @@
 #define CONTAINS(V, I) ((V)[I] <= (V)[N] + N)
 #define C CEILBPC(MAX(N, E))
 
+#include "iqsort.h"
 #include "random.h"
 #include "macros.h"
 
