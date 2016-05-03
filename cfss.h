@@ -20,15 +20,21 @@
 #define CONTAINS(V, I) ((V)[I] <= (V)[N] + N)
 #define C CEILBPC(MAX(N, E))
 
+#define RANGE 10
+//#define REORDER
+#define LIMIT 100
+
 #include "iqsort.h"
 #include "random.h"
 #include "macros.h"
 
 typedef struct {
-	agent a[2 * (E + 1)], n[2 * N + 1];
-	agent s[2 * N], cs[N];
-	edge g[N * N];
+	id a[2 * E], n[2 * N + 1];
+	id s[2 * N], cs[N];
+	id *adj[N];
+	id g[N * N];
 	chunk c[C];
+	value v[E], val;
 } stack;
 
 #endif /* CFSS_H_ */

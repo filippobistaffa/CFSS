@@ -2,14 +2,14 @@
 
 size_t count;
 struct timeval t1, t2;
-value min;
+value max;
 stack sol;
 bool stop;
 
 // F+
 
 __attribute__((always_inline))
-inline value cvaluep(stack *st, agent i) {
+inline value cvaluep(stack *st, id i) {
 
 	return 0;
 }
@@ -17,7 +17,7 @@ inline value cvaluep(stack *st, agent i) {
 // F-
 
 __attribute__((always_inline))
-inline value cvaluem(stack *st, agent i) {
+inline value cvaluem(stack *st, id i) {
 
 	return 0;
 }
@@ -27,8 +27,8 @@ inline value cvaluem(stack *st, agent i) {
 __attribute__((always_inline))
 inline value csvalue(stack *st) {
 
-	register const agent *p = st->n + N + 1;
-	register agent i, m = st->n[N];
+	register const id *p = st->n + N + 1;
+	register id i, m = st->n[N];
 	register value tot = 0;
 
 	do {
@@ -42,8 +42,8 @@ inline value csvalue(stack *st) {
 __attribute__((always_inline))
 inline value csvaluep(stack *st) {
 
-	register const agent *p = st->n + N + 1;
-	register agent i, m = st->n[N];
+	register const id *p = st->n + N + 1;
+	register id i, m = st->n[N];
 	register value tot = 0;
 
 	do {
@@ -57,8 +57,8 @@ inline value csvaluep(stack *st) {
 __attribute__((always_inline))
 inline value csvaluem(stack *st) {
 
-	register const agent *p = st->n + N + 1;
-	register agent i, m = st->n[N];
+	register const id *p = st->n + N + 1;
+	register id i, m = st->n[N];
 	register value tot = 0;
 
 	do {
@@ -69,14 +69,14 @@ inline value csvaluem(stack *st) {
 	return tot;
 }
 
-// Contract edge between v1 and v2
+// Contract id between v1 and v2
 
 __attribute__((always_inline)) inline
-void contract(stack *st, agent v1, agent v2) {
+void contract(stack *st, id v1, id v2) {
 
-	register agent i, m = st->n[N];
-	register const agent *p = st->n + N + 1;
-	register edge e, f;
+	register id i, m = st->n[N];
+	register const id *p = st->n + N + 1;
+	register id e, f;
 
 	do if ((i = *(p++)) != v1)
 		if ((e = st->g[i * N + v2])) {
@@ -94,9 +94,9 @@ void contract(stack *st, agent v1, agent v2) {
 // Merge coalitions of v1 and v2
 
 __attribute__((always_inline)) inline
-void merge(stack *st, agent v1, agent v2) {
+void merge(stack *st, id v1, id v2) {
 
-	register agent a, b, i, j, min = v1, max = v2, *p = st->n + N + 1;
+	register id a, b, i, j, min = v1, max = v2, *p = st->n + N + 1;
 
 	if (Y(st->s, max) < Y(st->s, min)) {
 		b = max;
@@ -109,11 +109,11 @@ void merge(stack *st, agent v1, agent v2) {
 	max = Y(st->s, max);
 	Y(st->s, v1) = min = Y(st->s, min);
 	X(st->s, v1) = a + b;
-	register agent *c = (agent *)malloc(sizeof(agent) * b);
-	memcpy(c, st->cs + max, sizeof(agent) * b);
-	memmove(st->cs + min + a + b, st->cs + min + a, sizeof(agent) * (max - min - a));
-	memmove(st->cs + min, st->cs + min, sizeof(agent) * a);
-	memcpy(st->cs + min + a, c, sizeof(agent) * b);
+	register id *c = (id *)malloc(sizeof(id) * b);
+	memcpy(c, st->cs + max, sizeof(id) * b);
+	memmove(st->cs + min + a + b, st->cs + min + a, sizeof(id) * (max - min - a));
+	memmove(st->cs + min, st->cs + min, sizeof(id) * a);
+	memcpy(st->cs + min + a, c, sizeof(id) * b);
 	free(c);
 
 	if ((j = st->n[st->n[N] + N]) != v2) {
@@ -134,13 +134,13 @@ void merge(stack *st, agent v1, agent v2) {
 
 void printcs(stack *st) {
 
-	register const agent *p = st->n + N + 1;
-        register agent i, m = st->n[N];
+	register const id *p = st->n + N + 1;
+        register id i, m = st->n[N];
 
 	do {
 		i = *(p++);
                 printf("{ ");
-                for (agent j = 0; j < X(st->s, i); j++)
+                for (id j = 0; j < X(st->s, i); j++)
                 	printf("%s%u%s ", i == st->cs[Y(st->s, i) + j] ? "<" : "", 
 			       1 + st->cs[Y(st->s, i) + j], i == st->cs[Y(st->s, i) + j] ? ">" : "");
                 printf("} = %f\n", cvaluep(st, i) + cvaluem(st, i));
@@ -152,12 +152,15 @@ void printcs(stack *st) {
 __attribute__((always_inline)) inline
 value bound(stack *st) {
 
-	register stack *cst = (stack *)malloc(sizeof(stack));
-	*cst = *st;
-	//printcs(cst);
-	register value vcst = csvaluep(cst);
-	free(cst);
-	return vcst + csvaluem(st);
+	register value maxgain = 0;
+	chunk tmp[C];
+	memcpy(tmp, st->c, sizeof(chunk) * C);
+	register id popc = MASKPOPCNT(tmp, C);
+
+	for (id i = 0, e = MASKFFS(tmp, C); !stop && i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C))
+		if (st->v[e] > 0) maxgain += st->v[e];
+
+	return maxgain + st->val;
 }
 
 void cfss(stack *st) {
@@ -165,7 +168,7 @@ void cfss(stack *st) {
 	count++;
 	//printcs(st);
 	register value cur = csvalue(st);
-	if (cur < min) { min = cur; sol = *st; }
+	if (cur > max) { max = cur; sol = *st; }
 
 	#ifdef LIMIT
 	if (!stop) {
@@ -174,16 +177,15 @@ void cfss(stack *st) {
 	}
 	#endif
 
-	if (stop || bound(st) > min) return;
+	if (stop || bound(st) <= max) return;
 
 	chunk tmp[C];
 	memcpy(tmp, st->c, sizeof(chunk) * C);
-	register edge popc = MASKPOPCNT(tmp, C);
+	register id popc = MASKPOPCNT(tmp, C);
 
-	for (edge i = 0, e = MASKFFS(tmp, C); !stop && i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C)) {
-
-		register agent v1 = X(st->a, e);
-		register agent v2 = Y(st->a, e);
+	for (id i = 0, e = MASKFFS(tmp, C); !stop && i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C)) {
+		register id v1 = X(st->a, e);
+		register id v2 = Y(st->a, e);
 		CLEAR(st->c, st->g[v1 * N + v2]);
 		st[1] = st[0];
 		merge(st + 1, v1, v2);
@@ -192,22 +194,22 @@ void cfss(stack *st) {
 	}
 }
 
-inline void createedge(agent *a, agent v1, agent v2, edge e) {
+inline void createid(id *a, id v1, id v2, id e) {
 
 	X(a, e) = v1;
 	Y(a, e) = v2;
 }
 
 #ifndef TWITTER
-void scalefree(agent *a) {
+void scalefree(id *a) {
 
 	unsigned deg[N] = {0};
-	register uint_fast64_t d, i, j, h, k = 1, q, t = 0;
+	register uint_fast64_t d, i, j, h, k = 0, q, t = 0;
 	register int p;
 
 	for (i = 1; i <= K; i++) {
 		for (j = 0; j < i; j++) {
-			createedge(a, i, j, k++);
+			createid(a, i, j, k++);
 			deg[i]++;
 			deg[j]++;
 		}
@@ -228,7 +230,7 @@ void scalefree(agent *a) {
 				}
 				q--;
 				t |= 1ULL << q;
-				createedge(a, i, q, k++);
+				createid(a, i, q, k++);
 				deg[i]++;
 				deg[q]++;
 			}
@@ -237,75 +239,131 @@ void scalefree(agent *a) {
 }
 #endif
 
-void reorderedges(agent *a, value *v) {
+void createadj(id *a, id *adj[N]) {
 
-	typedef struct { agent v1; agent v2; value v; } ev;
-	ev evb[E + 1];
-	edge i;
+	id *c = (id *)calloc(N, sizeof(id));
 
-	for (i = 1; i < E + 1; i++) {
+	for (id i = 0; i < E; i++) {
+		c[X(a, i)]++;
+		c[Y(a, i)]++;
+	}
+
+	for (id i = 0; i < N; i++) {
+		adj[i] = (id *)malloc(sizeof(id) * (2 * c[i] + 1));
+		*adj[i] = c[i];
+	}
+
+	memset(c, 0, sizeof(id) * N);
+
+	for (id i = 0; i < E; i++) {
+		//printf("i = %u, X(a, i) = %u, Y(a, i) = %u, c[X(a, i)] = %u, c[Y(a, i)] = %u\n", i, X(a, i), Y(a, i), c[X(a, i)], c[Y(a, i)]);
+		X(adj[X(a, i)] + 1, c[X(a, i)]) = Y(a, i);
+		Y(adj[X(a, i)] + 1, c[X(a, i)]) = i;
+		X(adj[Y(a, i)] + 1, c[Y(a, i)]) = X(a, i);
+		Y(adj[Y(a, i)] + 1, c[Y(a, i)]) = i;
+		c[X(a, i)]++;
+		c[Y(a, i)]++;
+	}
+
+	free(c);
+	typedef struct { id a; id i; } aid;
+	#define ltaid(X, Y) ((*(X)).a < (*(Y)).a)
+
+	for (id i = 0; i < N; i++) {
+		aid *buf = (aid *)(adj[i] + 1);
+		QSORT(aid, buf, *adj[i], ltaid);
+	}
+
+	for (id i = 0; i < N; i++) {
+		printf("%u = [ ", i);
+		for (id j = 0; j < *adj[i]; j++)
+			printf("%u (%u) ", X(adj[i] + 1, j), Y(adj[i] + 1, j));
+		printf("]\n");
+	}
+}
+
+void reorderids(id *a, value *v) {
+
+	typedef struct { id v1; id v2; value v; } ev;
+	ev evb[E];
+
+	for (id i = 0; i < E; i++) {
 		evb[i].v = v[i];
 		evb[i].v1 = X(a, i);
 		evb[i].v2 = Y(a, i);
 	}
 
 	#define gtv(a, b) ((*(a)).v > (*(b)).v)
-	QSORT(ev, evb + 1, E, gtv);
+	QSORT(ev, evb, E, gtv);
 
 	#define gt(a, b) ((*(a)) > (*(b)))
-        QSORT(value, v + 1, E, gt);
+        QSORT(value, v, E, gt);
 
-	for (i = 1; i < E + 1; i++)
-		createedge(a, evb[i].v1, evb[i].v2, i);
+	for (id i = 0; i < E; i++)
+		createid(a, evb[i].v1, evb[i].v2, i);
 }
 
 int main(int argc, char *argv[]) {
 
+	printf("Total = %zu\n", sizeof(stack) * N);
+	printf("g  = %zu\n", sizeof(id) * N * N * N);
+	printf("cs = %zu\n", sizeof(id) * N * N);
+	printf("a  = %zu\n", sizeof(id) * N * 2 * E);
+	printf("n  = %zu\n", sizeof(id) * N * (2 * N + 1));
+	printf("s  = %zu\n", sizeof(id) * N * 2 * N);
+	printf("d  = %f\n", (double)E / (N * N));
+
 	stack *st = (stack *)malloc(sizeof(stack) * N);
 	if (!st) { puts("Error allocating stack"); exit(1); }
-	memset(st->g, 0, sizeof(edge) * N * N);
 	memset(st->c, 0, sizeof(chunk) * C);
 	st->n[N] = N;
 
-	for (agent i = 0; i < N; i++) {
+	for (id i = 0; i < N; i++) {
 		X(st->s, i) = 1;
 		Y(st->s, i) = st->cs[i] = i;
 		st->n[st->n[i] = N + i + 1] = i;
 	}
 
-	ONES(st->c, E + 1, C);
-	CLEAR(st->c, 0);
+	ONES(st->c, E, C);
 
 	// Initialise graph
 
 	#ifdef TWITTER
-	memcpy(st->g, g, sizeof(edge) * N * N);
-	memcpy(st->a, a, sizeof(agent) * 2 * (E + 1));
+	memcpy(st->a, a, sizeof(id) * 2 * E);
 	#else
 	init(SEED);
 	scalefree(st->a);
 	#endif
 
-	// Read energy profiles
+	// initialise id values
 
-	value in = min = csvalue(st);
+	for (id i = 0; i < E; i++)
+		st->v[i] = nextInt(RANGE * 2) - RANGE;
+
+	#ifdef REORDER
+	reorderids(st->a, st->v);
+	#endif
+
+	for (id i = 0; i < E; i++)
+		printf("%u: (%u, %u) = %f\n", i, X(st->a, i), Y(st->a, i), st->v[i]);
+
+	createadj(st->a, st->adj);
+	st->val = max = 0;
 	sol = *st;
 	#ifdef LIMIT
 	value bou = bound(st);
 	#endif
 
-	gettimeofday(&t1, NULL);
-	cfss(st);
-	gettimeofday(&t2, NULL);
-	free(st);
+	//gettimeofday(&t1, NULL);
+	//cfss(st);
+	//gettimeofday(&t2, NULL);
+	//free(st);
 
 	//printcs(&sol);
 	#ifdef LIMIT
-	printf("%u,%u,%u,%f,%f,%f,%f,%f,%f,%zu\n", N, E, SEED, in, min, bou, (in - min) / in, min / bou,
-	       (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
+	printf("%u,%u,%u,%f,%f,%f,%f,%zu\n", N, E, SEED, max, bou, max / bou, (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
 	#else
-	printf("%u,%u,%u,%f,%f,%f,%f,%zu\n", N, E, SEED, in, min, (in - min) / in,
-	       (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
+	printf("%u,%u,%u,%f,%f,%zu\n", N, E, SEED, max, (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
 	#endif
 
 	return 0;
