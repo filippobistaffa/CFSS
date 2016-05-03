@@ -6,70 +6,29 @@ value max;
 stack sol;
 bool stop;
 
-// F+
+typedef struct { id a; id i; } aid;
 
-__attribute__((always_inline))
-inline value cvaluep(stack *st, id i) {
+__attribute__((always_inline)) inline
+unsigned binarysearch(id x, const aid *buf, unsigned n) {
 
-	return 0;
+	if (n) {
+		#define MIDPOINT(_min, _max) (_min + ((_max - _min) / 2))
+		register unsigned imin = 0, imid, imax = n - 1;
+
+		while (imin < imax) {
+			imid = MIDPOINT(imin, imax);
+			if (buf[imid].a < x) imin = imid + 1;
+			else imax = imid;
+		}
+
+		if (imax == imin && buf[imin].a == x) return imin;
+	}
+	return n + 1;
 }
 
-// F-
+#define EDGEID(ADJ, IDXADJ, V1, V2) Y(ADJ, binarysearch(MAX(V1, V2), (aid *)(ADJ + 2 * Y(IDXADJ, MIN(V1, V2))), X(IDXADJ, MIN(V1, V2))) + Y(IDXADJ, MIN(V1, V2)))
 
-__attribute__((always_inline))
-inline value cvaluem(stack *st, id i) {
-
-	return 0;
-}
-
-// Total value of the coalition structure
-
-__attribute__((always_inline))
-inline value csvalue(stack *st) {
-
-	register const id *p = st->n + N + 1;
-	register id i, m = st->n[N];
-	register value tot = 0;
-
-	do {
-		i = *(p++);
-		tot += cvaluep(st, i) + cvaluem(st, i);
-	} while (--m);
-
-	return tot;
-}
-
-__attribute__((always_inline))
-inline value csvaluep(stack *st) {
-
-	register const id *p = st->n + N + 1;
-	register id i, m = st->n[N];
-	register value tot = 0;
-
-	do {
-		i = *(p++);
-		tot += cvaluep(st, i);
-	} while (--m);
-
-	return tot;
-}
-
-__attribute__((always_inline))
-inline value csvaluem(stack *st) {
-
-	register const id *p = st->n + N + 1;
-	register id i, m = st->n[N];
-	register value tot = 0;
-
-	do {
-		i = *(p++);
-		tot += cvaluem(st, i);
-	} while (--m);
-
-	return tot;
-}
-
-// Contract id between v1 and v2
+// Contract edge between v1 and v2
 
 __attribute__((always_inline)) inline
 void contract(stack *st, id v1, id v2) {
@@ -79,12 +38,16 @@ void contract(stack *st, id v1, id v2) {
 	register id e, f;
 
 	do if ((i = *(p++)) != v1)
-		if ((e = st->g[i * N + v2])) {
-			if ((f = st->g[i * N + v1])) {
+		//if ((e = st->g[i * N + v2])) {
+		if ((e = EDGEID(st->adj, st->idxadj, i, v2))) {
+			//if ((f = st->g[i * N + v1])) {
+			if ((f = EDGEID(st->adj, st->idxadj, i, v1))) {
 				if (!GET(st->c, f)) CLEAR(st->c, e);
+				st->v[e] += st->v[f];
 				CLEAR(st->c, f);
 			}
-			st->g[i * N + v1] = st->g[v1 * N + i] = e;
+			//st->g[i * N + v1] = st->g[v1 * N + i] = e;
+			EDGEID(st->adj, st->idxadj, i, v1) = e;
 			X(st->a, e) = v1;
 			Y(st->a, e) = i;
 		}
@@ -96,25 +59,7 @@ void contract(stack *st, id v1, id v2) {
 __attribute__((always_inline)) inline
 void merge(stack *st, id v1, id v2) {
 
-	register id a, b, i, j, min = v1, max = v2, *p = st->n + N + 1;
-
-	if (Y(st->s, max) < Y(st->s, min)) {
-		b = max;
-		max = min;
-		min = b;
-	}
-
-	a = X(st->s, min);
-	b = X(st->s, max);
-	max = Y(st->s, max);
-	Y(st->s, v1) = min = Y(st->s, min);
-	X(st->s, v1) = a + b;
-	register id *c = (id *)malloc(sizeof(id) * b);
-	memcpy(c, st->cs + max, sizeof(id) * b);
-	memmove(st->cs + min + a + b, st->cs + min + a, sizeof(id) * (max - min - a));
-	memmove(st->cs + min, st->cs + min, sizeof(id) * a);
-	memcpy(st->cs + min + a, c, sizeof(id) * b);
-	free(c);
+	register id j;
 
 	if ((j = st->n[st->n[N] + N]) != v2) {
 		st->n[j] = st->n[v2];
@@ -122,35 +67,11 @@ void merge(stack *st, id v1, id v2) {
 		st->n[v2] = st->n[N] + N;
 	}
 
-	j = --(st->n[N]);
-
-	do if ((i = *(p++)) != v1) {
-		a = Y(st->s, i);
-		if (a > min && a < max) Y(st->s, i) = a + b;
-	} while (--j);
-}
-
-// Print coalition structure
-
-void printcs(stack *st) {
-
-	register const id *p = st->n + N + 1;
-        register id i, m = st->n[N];
-
-	do {
-		i = *(p++);
-                printf("{ ");
-                for (id j = 0; j < X(st->s, i); j++)
-                	printf("%s%u%s ", i == st->cs[Y(st->s, i) + j] ? "<" : "", 
-			       1 + st->cs[Y(st->s, i) + j], i == st->cs[Y(st->s, i) + j] ? ">" : "");
-                printf("} = %f\n", cvaluep(st, i) + cvaluem(st, i));
-        } while (--m);
-
-	puts("");
+	(st->n[N])--;
 }
 
 __attribute__((always_inline)) inline
-value bound(stack *st) {
+value bound(const stack *st) {
 
 	register value maxgain = 0;
 	chunk tmp[C];
@@ -167,8 +88,7 @@ void cfss(stack *st) {
 
 	count++;
 	//printcs(st);
-	register value cur = csvalue(st);
-	if (cur > max) { max = cur; sol = *st; }
+	if (st->val > max) { max = st->val; sol = *st; }
 
 	#ifdef LIMIT
 	if (!stop) {
@@ -186,10 +106,12 @@ void cfss(stack *st) {
 	for (id i = 0, e = MASKFFS(tmp, C); !stop && i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C)) {
 		register id v1 = X(st->a, e);
 		register id v2 = Y(st->a, e);
-		CLEAR(st->c, st->g[v1 * N + v2]);
+		//CLEAR(st->c, st->g[v1 * N + v2]);
+		CLEAR(st->c, EDGEID(st->adj, st->idxadj, v1, v2));
 		st[1] = st[0];
 		merge(st + 1, v1, v2);
 		contract(st + 1, v1, v2);
+		st[1].val += st[1].v[e];
 		cfss(st + 1);
 	}
 }
@@ -239,50 +161,55 @@ void scalefree(id *a) {
 }
 #endif
 
-void createadj(id *a, id *adj[N]) {
+template <typename type>
+__attribute__((always_inline)) inline
+void exclprefixsum(const type *hi, type *ho, unsigned hn) {
+
+	if (hn) {
+		ho[0] = 0;
+		for (unsigned i = 1; i < hn; i++)
+			ho[i] = hi[i - 1] + ho[i - 1];
+	}
+}
+
+void createadj(stack *st) {
 
 	id *c = (id *)calloc(N, sizeof(id));
 
-	for (id i = 0; i < E; i++) {
-		c[X(a, i)]++;
-		c[Y(a, i)]++;
-	}
+	for (id i = 0; i < E; i++)
+		c[MIN(X(st->a, i), Y(st->a, i))]++;
 
-	for (id i = 0; i < N; i++) {
-		adj[i] = (id *)malloc(sizeof(id) * (2 * c[i] + 1));
-		*adj[i] = c[i];
+	for (id i = 0, pfx = 0; i < N; i++) {
+		X(st->idxadj, i) = c[i];
+		Y(st->idxadj, i) = pfx;
+		pfx += c[i];
 	}
 
 	memset(c, 0, sizeof(id) * N);
 
 	for (id i = 0; i < E; i++) {
-		//printf("i = %u, X(a, i) = %u, Y(a, i) = %u, c[X(a, i)] = %u, c[Y(a, i)] = %u\n", i, X(a, i), Y(a, i), c[X(a, i)], c[Y(a, i)]);
-		X(adj[X(a, i)] + 1, c[X(a, i)]) = Y(a, i);
-		Y(adj[X(a, i)] + 1, c[X(a, i)]) = i;
-		X(adj[Y(a, i)] + 1, c[Y(a, i)]) = X(a, i);
-		Y(adj[Y(a, i)] + 1, c[Y(a, i)]) = i;
-		c[X(a, i)]++;
-		c[Y(a, i)]++;
+		id min = MIN(X(st->a, i), Y(st->a, i));
+		id max = MAX(X(st->a, i), Y(st->a, i));
+		X(st->adj, c[min] + Y(st->idxadj, min)) = max;
+		Y(st->adj, c[min] + Y(st->idxadj, min)) = i;
+		c[min]++;
 	}
 
 	free(c);
-	typedef struct { id a; id i; } aid;
-	#define ltaid(X, Y) ((*(X)).a < (*(Y)).a)
+	#define LTA(X, Y) ((*(X)).a < (*(Y)).a)
 
-	for (id i = 0; i < N; i++) {
-		aid *buf = (aid *)(adj[i] + 1);
-		QSORT(aid, buf, *adj[i], ltaid);
-	}
+	for (id i = 0; i < N; i++)
+		QSORT(aid, (aid *)(st->adj) + Y(st->idxadj, i), X(st->idxadj, i), LTA);
 
 	for (id i = 0; i < N; i++) {
 		printf("%u = [ ", i);
-		for (id j = 0; j < *adj[i]; j++)
-			printf("%u (%u) ", X(adj[i] + 1, j), Y(adj[i] + 1, j));
+		for (id j = 0; j < X(st->idxadj, i); j++)
+			printf("%u (%u) ", X(st->adj, j + Y(st->idxadj, i)), Y(st->adj, j + Y(st->idxadj, i)));
 		printf("]\n");
 	}
 }
 
-void reorderids(id *a, value *v) {
+void reorderedges(id *a, value *v) {
 
 	typedef struct { id v1; id v2; value v; } ev;
 	ev evb[E];
@@ -293,11 +220,11 @@ void reorderids(id *a, value *v) {
 		evb[i].v2 = Y(a, i);
 	}
 
-	#define gtv(a, b) ((*(a)).v > (*(b)).v)
-	QSORT(ev, evb, E, gtv);
+	#define GTV(X, Y) ((*(X)).v > (*(Y)).v)
+	QSORT(ev, evb, E, GTV);
 
-	#define gt(a, b) ((*(a)) > (*(b)))
-        QSORT(value, v, E, gt);
+	#define GT(X, Y) ((*(X)) > (*(Y)))
+        QSORT(value, v, E, GT);
 
 	for (id i = 0; i < E; i++)
 		createid(a, evb[i].v1, evb[i].v2, i);
@@ -305,13 +232,15 @@ void reorderids(id *a, value *v) {
 
 int main(int argc, char *argv[]) {
 
-	printf("Total = %zu\n", sizeof(stack) * N);
-	printf("g  = %zu\n", sizeof(id) * N * N * N);
-	printf("cs = %zu\n", sizeof(id) * N * N);
-	printf("a  = %zu\n", sizeof(id) * N * 2 * E);
-	printf("n  = %zu\n", sizeof(id) * N * (2 * N + 1));
-	printf("s  = %zu\n", sizeof(id) * N * 2 * N);
-	printf("d  = %f\n", (double)E / (N * N));
+	printf("Tot  = %zu\n", sizeof(stack) * N);
+	printf("adj  = %zu\n", sizeof(id) * N * 2 * E);
+	printf("iadj = %zu\n", sizeof(id) * N * 2 * N);
+	printf("a    = %zu\n", sizeof(id) * N * 2 * E);
+	printf("n    = %zu\n", sizeof(id) * N * (2 * N + 1));
+	printf("E    = %u\n", E);
+	printf("d    = %f\n", (double)E / (N * N));
+
+	//exit(0);
 
 	stack *st = (stack *)malloc(sizeof(stack) * N);
 	if (!st) { puts("Error allocating stack"); exit(1); }
@@ -319,8 +248,6 @@ int main(int argc, char *argv[]) {
 	st->n[N] = N;
 
 	for (id i = 0; i < N; i++) {
-		X(st->s, i) = 1;
-		Y(st->s, i) = st->cs[i] = i;
 		st->n[st->n[i] = N + i + 1] = i;
 	}
 
@@ -341,18 +268,27 @@ int main(int argc, char *argv[]) {
 		st->v[i] = nextInt(RANGE * 2) - RANGE;
 
 	#ifdef REORDER
-	reorderids(st->a, st->v);
+	reorderedges(st->a, st->v);
 	#endif
 
 	for (id i = 0; i < E; i++)
 		printf("%u: (%u, %u) = %f\n", i, X(st->a, i), Y(st->a, i), st->v[i]);
 
-	createadj(st->a, st->adj);
+	createadj(st);
 	st->val = max = 0;
 	sol = *st;
 	#ifdef LIMIT
 	value bou = bound(st);
 	#endif
+
+	printf("%u\n", EDGEID(st->adj, st->idxadj, 9, 10));
+	printf("%u\n", EDGEID(st->adj, st->idxadj, 9, 18));
+	printf("%u\n", EDGEID(st->adj, st->idxadj, 0, 16));
+	printf("%u\n", EDGEID(st->adj, st->idxadj, 0, 17));
+	printf("%u\n", EDGEID(st->adj, st->idxadj, 0, 13));
+	printf("%u\n", EDGEID(st->adj, st->idxadj, 1, 14));
+	printf("%u\n", EDGEID(st->adj, st->idxadj, 2, 5));
+	printf("%u\n", EDGEID(st->adj, st->idxadj, 3, 12));
 
 	//gettimeofday(&t1, NULL);
 	//cfss(st);

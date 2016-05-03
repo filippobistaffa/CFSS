@@ -12,7 +12,7 @@
 #ifndef TWITTER
 #define N 20
 #define K 2
-#define SEED 1
+#define SEED 2
 #define E (K * N - (K * (K + 1)) / 2)
 #include "types.h"
 #endif
@@ -30,9 +30,8 @@
 
 typedef struct {
 	id a[2 * E], n[2 * N + 1];
-	id s[2 * N], cs[N];
-	id *adj[N];
-	id g[N * N];
+	id idxadj[2 * N];
+	id adj[2 * E];
 	chunk c[C];
 	value v[E], val;
 } stack;
