@@ -6,3 +6,6 @@ OUT=cfss
 
 all:
 	g++ ${OPT} *.c *.cpp ${LIB} -o ${OUT}
+
+run:
+	./cfss

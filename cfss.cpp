@@ -26,7 +26,78 @@ unsigned binarysearch(id x, const aid *buf, unsigned n) {
 	return n + 1;
 }
 
-#define EDGEID(ADJ, IDXADJ, V1, V2) Y(ADJ, binarysearch(MAX(V1, V2), (aid *)(ADJ + 2 * Y(IDXADJ, MIN(V1, V2))), X(IDXADJ, MIN(V1, V2))) + Y(IDXADJ, MIN(V1, V2)))
+__attribute__((always_inline)) inline
+unsigned insertionordered(id x, const aid *buf, unsigned n) {
+
+	if (n) {
+		register unsigned imin = 0, imid, imax = n - 1;
+
+		if (x < buf[imin].a) return imin;
+		if (buf[imax].a < x) return n;
+
+		while (imax - imin != 1) {
+			imid = MIDPOINT(imin, imax);
+			//printf("1: %u %u %u\n", imin, imid, imax);
+			if (buf[imid].a < x) imin = imid;
+			else imax = imid;
+			//printf("2: %u %u %u\n", imin, imid, imax);
+		}
+
+		return imax;
+	}
+	return 0;
+}
+
+#define BINARYSEARCH(_ADJ, _IDXADJ, _MIN, _MAX) binarysearch(_MAX, (aid *)(_ADJ + 2 * Y(_IDXADJ, _MIN)), X(_IDXADJ, _MIN))
+#define INSERTIONORDERED(_ADJ, _IDXADJ, _MIN, _MAX) insertionordered(_MAX, (aid *)(_ADJ + 2 * Y(_IDXADJ, _MIN)), X(_IDXADJ, _MIN))
+
+__attribute__((always_inline)) inline
+int getedge(const id *adj, const id *idxadj, id v1, id v2) {
+
+	const id min = MIN(v1, v2);
+	const id max = MAX(v1, v2);
+	const id idx = BINARYSEARCH(adj, idxadj, min, max);
+	return (idx > X(idxadj, min)) ? -1 : Y(adj, idx + Y(idxadj, min));
+}
+
+// move edge e (v2, i) -> (v1, i)
+
+__attribute__((always_inline)) inline
+void moveedge(id *adj, id *idxadj, id v1, id v2, id i, id e) {
+
+	const id minsrc = MIN(v2, i);
+	const id mindst = MIN(v1, i);
+	const id maxsrc = MAX(v2, i);
+	const id maxdst = MAX(v1, i);
+
+	const id idxsrc = BINARYSEARCH(adj, idxadj, minsrc, maxsrc);		// old index of e in minsrc's list
+	const id idxdst = INSERTIONORDERED(adj, idxadj, mindst, maxdst);	// new index of e in mindst's list
+
+	if (minsrc < mindst) { // move backwards
+
+		id n = X(idxadj, minsrc) - idxsrc - 1;
+		n += idxdst;
+
+		for (id j = minsrc + 1; j < mindst; j++) {
+			n += X(idxadj, j);
+			Y(idxadj, j)--;
+		}
+
+		Y(idxadj, mindst)--;
+
+	} else { // move forwards
+
+		id n = X(idxadj, mindst) - idxdst;
+		n += idxsrc;
+
+		for (id j = mindst + 1; j < minsrc; j++) {
+			n += X(idxadj, j);
+			Y(idxadj, j)++;
+		}
+
+		Y(idxadj, minsrc)++;
+	}
+}
 
 // Contract edge between v1 and v2
 
@@ -35,28 +106,38 @@ void contract(stack *st, id v1, id v2) {
 
 	register id i, m = st->n[N];
 	register const id *p = st->n + N + 1;
-	register id e, f;
+	register int e, f;
 
-	do if ((i = *(p++)) != v1)
+	do if ((i = *(p++)) != v1) {
 		//if ((e = st->g[i * N + v2])) {
-		if ((e = EDGEID(st->adj, st->idxadj, i, v2))) {
+		printf("i = %u v1 = %u v2 = %u\n", i, v1, v2);
+		if ((e = getedge(st->adj, st->idxadj, i, v2)) > 0) {
+			printf("e = %u\n", e + 1);
 			//if ((f = st->g[i * N + v1])) {
-			if ((f = EDGEID(st->adj, st->idxadj, i, v1))) {
+			if ((f = getedge(st->adj, st->idxadj, i, v1)) > 0) {
+				printf("f = %u\n", f + 1);
 				if (!GET(st->c, f)) CLEAR(st->c, e);
 				st->v[e] += st->v[f];
 				CLEAR(st->c, f);
 			}
 			//st->g[i * N + v1] = st->g[v1 * N + i] = e;
-			EDGEID(st->adj, st->idxadj, i, v1) = e;
+			moveedge(st->adj, st->idxadj, v1, v2, i, e);
 			X(st->a, e) = v1;
 			Y(st->a, e) = i;
-		}
+		}}
 	while (--m);
+
+	for (id i = 0; i < N; i++) {
+		printf("%u = [ ", i);
+		for (id j = 0; j < X(st->idxadj, i); j++)
+			printf("%u (%u) ", X(st->adj, j + Y(st->idxadj, i)), Y(st->adj, j + Y(st->idxadj, i)));
+		printf("]\n");
+	}
 }
 
 // Merge coalitions of v1 and v2
 
-__attribute__((always_inline)) inline
+/*__attribute__((always_inline)) inline
 void merge(stack *st, id v1, id v2) {
 
 	register id j;
@@ -68,6 +149,62 @@ void merge(stack *st, id v1, id v2) {
 	}
 
 	(st->n[N])--;
+}*/
+
+__attribute__((always_inline)) inline
+void merge(stack *st, id v1, id v2) {
+
+	register id a, b, i, j, min = v1, max = v2, *p = st->n + N + 1;
+
+	if (Y(st->s, max) < Y(st->s, min)) {
+		b = max;
+		max = min;
+		min = b;
+	}
+
+	a = X(st->s, min);
+	b = X(st->s, max);
+	max = Y(st->s, max);
+	Y(st->s, v1) = min = Y(st->s, min);
+	X(st->s, v1) = a + b;
+	register id *c = (id *)malloc(sizeof(id) * b);
+	memcpy(c, st->cs + max, sizeof(id) * b);
+	memmove(st->cs + min + a + b, st->cs + min + a, sizeof(id) * (max - min - a));
+	memmove(st->cs + min, st->cs + min, sizeof(id) * a);
+	memcpy(st->cs + min + a, c, sizeof(id) * b);
+	free(c);
+
+	if ((j = st->n[st->n[N] + N]) != v2) {
+		st->n[j] = st->n[v2];
+		st->n[st->n[v2]] = j;
+		st->n[v2] = st->n[N] + N;
+	}
+
+	j = --(st->n[N]);
+
+	do if ((i = *(p++)) != v1) {
+		a = Y(st->s, i);
+		if (a > min && a < max) Y(st->s, i) = a + b;
+	} while (--j);
+}
+
+// Print coalition structure
+
+void printcs(stack *st) {
+
+	register const id *p = st->n + N + 1;
+        register id i, m = st->n[N];
+
+	do {
+		i = *(p++);
+                printf("{ ");
+                for (id j = 0; j < X(st->s, i); j++)
+                	printf("%s%u%s ", i == st->cs[Y(st->s, i) + j] ? "<" : "", 
+			       1 + st->cs[Y(st->s, i) + j], i == st->cs[Y(st->s, i) + j] ? ">" : "");
+                printf("}");
+        } while (--m);
+
+	puts("");
 }
 
 __attribute__((always_inline)) inline
@@ -87,7 +224,7 @@ value bound(const stack *st) {
 void cfss(stack *st) {
 
 	count++;
-	//printcs(st);
+	printcs(st);
 	if (st->val > max) { max = st->val; sol = *st; }
 
 	#ifdef LIMIT
@@ -97,7 +234,7 @@ void cfss(stack *st) {
 	}
 	#endif
 
-	if (stop || bound(st) <= max) return;
+	//if (stop || bound(st) <= max) return;
 
 	chunk tmp[C];
 	memcpy(tmp, st->c, sizeof(chunk) * C);
@@ -107,7 +244,10 @@ void cfss(stack *st) {
 		register id v1 = X(st->a, e);
 		register id v2 = Y(st->a, e);
 		//CLEAR(st->c, st->g[v1 * N + v2]);
-		CLEAR(st->c, EDGEID(st->adj, st->idxadj, v1, v2));
+		printf("%lu\n", st->c[0] << 1);
+		printf("clearing %u\n", e);
+		CLEAR(st->c, e);
+		printf("%lu\n", st->c[0] << 1);
 		st[1] = st[0];
 		merge(st + 1, v1, v2);
 		contract(st + 1, v1, v2);
@@ -248,6 +388,8 @@ int main(int argc, char *argv[]) {
 	st->n[N] = N;
 
 	for (id i = 0; i < N; i++) {
+		X(st->s, i) = 1;
+		Y(st->s, i) = st->cs[i] = i;
 		st->n[st->n[i] = N + i + 1] = i;
 	}
 
@@ -281,19 +423,10 @@ int main(int argc, char *argv[]) {
 	value bou = bound(st);
 	#endif
 
-	printf("%u\n", EDGEID(st->adj, st->idxadj, 9, 10));
-	printf("%u\n", EDGEID(st->adj, st->idxadj, 9, 18));
-	printf("%u\n", EDGEID(st->adj, st->idxadj, 0, 16));
-	printf("%u\n", EDGEID(st->adj, st->idxadj, 0, 17));
-	printf("%u\n", EDGEID(st->adj, st->idxadj, 0, 13));
-	printf("%u\n", EDGEID(st->adj, st->idxadj, 1, 14));
-	printf("%u\n", EDGEID(st->adj, st->idxadj, 2, 5));
-	printf("%u\n", EDGEID(st->adj, st->idxadj, 3, 12));
-
-	//gettimeofday(&t1, NULL);
-	//cfss(st);
-	//gettimeofday(&t2, NULL);
-	//free(st);
+	gettimeofday(&t1, NULL);
+	cfss(st);
+	gettimeofday(&t2, NULL);
+	free(st);
 
 	//printcs(&sol);
 	#ifdef LIMIT

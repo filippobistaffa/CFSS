@@ -10,7 +10,7 @@
 #include <immintrin.h>
 
 #ifndef TWITTER
-#define N 20
+#define N 5
 #define K 2
 #define SEED 2
 #define E (K * N - (K * (K + 1)) / 2)
@@ -22,7 +22,7 @@
 
 #define RANGE 10
 //#define REORDER
-#define LIMIT 100
+//#define LIMIT 100
 
 #include "iqsort.h"
 #include "random.h"
@@ -32,6 +32,7 @@ typedef struct {
 	id a[2 * E], n[2 * N + 1];
 	id idxadj[2 * N];
 	id adj[2 * E];
+	id s[2 * N], cs[N];
 	chunk c[C];
 	value v[E], val;
 } stack;
