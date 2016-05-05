@@ -4,8 +4,8 @@
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 
-#define X(V, I) ((V)[2 * (I)])
-#define Y(V, I) ((V)[2 * (I) + 1])
+#define X(V, I) ((V)[I].x)
+#define Y(V, I) ((V)[I].y)
 
 #define DIVBPC(X) ((X) / BITSPERCHUNK)
 #define MODBPC(X) ((X) % BITSPERCHUNK)

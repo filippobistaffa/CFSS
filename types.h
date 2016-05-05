@@ -8,5 +8,6 @@ typedef uint64_t chunk;
 #define ONE 1ULL
 typedef uint32_t id;
 typedef float value;
+typedef struct { id x, y; } idc;
 
 #endif  /* TYPES_H_ */
