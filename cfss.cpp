@@ -302,7 +302,7 @@ value bound(const stack *st) {
 	memcpy(tmp, st->c, sizeof(chunk) * C);
 	register id popc = MASKPOPCNT(tmp, C);
 
-	for (id i = 0, e = MASKFFS(tmp, C); !stop && i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C))
+	for (id i = 0, e = MASKFFS(tmp, C); i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C))
 		if (st->v[e] > 0) maxgain += st->v[e];
 
 	return maxgain + st->val;
@@ -323,7 +323,7 @@ void cfss(stack *st) {
 	}
 	#endif
 
-	//if (stop || bound(st) <= max) return;
+	if (stop || bound(st) - k <= max) return;
 
 	chunk tmp[C];
 	memcpy(tmp, st->c, sizeof(chunk) * C);
@@ -506,10 +506,11 @@ int main(int argc, char *argv[]) {
 	//	printf("%u: (%u, %u) = %f\n", i, X(st->a, i), Y(st->a, i), st->v[i]);
 
 	createadj(st);
-	st->val = max = 0;
+	st->val = 0;
+	max = -N;
 	sol = *st;
 	#ifdef LIMIT
-	value bou = bound(st);
+	value bou = bound(st) - N;
 	#endif
 
 	gettimeofday(&t1, NULL);
