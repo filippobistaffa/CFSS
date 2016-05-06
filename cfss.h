@@ -10,9 +10,8 @@
 #include <immintrin.h>
 
 #ifndef TWITTER
-#define N 5
+#define N 17
 #define K 2
-#define SEED 2
 #define E (K * N - (K * (K + 1)) / 2)
 #include "types.h"
 #endif
@@ -23,18 +22,20 @@
 #define RANGE 10
 //#define REORDER
 //#define LIMIT 100
+//#define GAMMA 1.8
+//#define KAPPA(S) (pow(S, GAMMA))
+#include "k.i"
+#define KAPPA(S) (lookup[S])
 
 #include "iqsort.h"
 #include "random.h"
 #include "macros.h"
 
 typedef struct {
-	id a[2 * E], n[2 * N + 1];
-	id idxadj[2 * N];
-	id adj[2 * E];
-	id s[2 * N], cs[N];
-	chunk c[C];
+	idc a[E], idxadj[N], adj[E];
+	id n[2 * N + 1], s[N];
 	value v[E], val;
+	chunk c[C];
 } stack;
 
 #endif /* CFSS_H_ */
