@@ -2,7 +2,7 @@
 
 size_t count;
 struct timeval t1, t2;
-value max;
+value max, bou;
 stack sol;
 bool stop;
 
@@ -192,18 +192,15 @@ void contract(stack *st, id v1, id v2) {
 			Y(st->a, e) = i;
 		}}
 	while (--m);
-	
+
 	//removeedge(st->adj, st->idxadj, v1, v2);
-	
+
 	/*for (id i = 0; i < N; i++) {
 		printf("%u = [ ", i);
 		for (id j = 0; j < X(st->idxadj, i); j++)
 			printf("%u (%u) ", X(st->adj, j + Y(st->idxadj, i)), Y(st->adj, j + Y(st->idxadj, i)));
 		printf("]\n");
 	}*/
-
-	//BREAKPOINT("");
-	//exit(0);
 }
 
 // Merge coalitions of v1 and v2
@@ -271,7 +268,7 @@ void merge(stack *st, id v1, id v2) {
 		id i = *(p++);
                 printf("{ ");
                 for (id j = 0; j < X(st->s, i); j++)
-                	printf("%s%u%s ", i == st->cs[Y(st->s, i) + j] ? "<" : "", 
+                	printf("%s%u%s ", i == st->cs[Y(st->s, i) + j] ? "<" : "",
 			       st->cs[Y(st->s, i) + j], i == st->cs[Y(st->s, i) + j] ? ">" : "");
                 printf("}");
         } while (--m);
@@ -312,7 +309,7 @@ void cfss(stack *st) {
 
 	count++;
 	//printcs(st);
-	
+
 	const value k = totalk(st);
 	if (st->val - k > max) { max = st->val - k; sol = *st; }
 
@@ -328,7 +325,6 @@ void cfss(stack *st) {
 	chunk tmp[C];
 	memcpy(tmp, st->c, sizeof(chunk) * C);
 	register id popc = MASKPOPCNT(tmp, C);
-	//printf("popc = %u\n", popc);
 
 	for (id i = 0, e = MASKFFS(tmp, C); !stop && i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C)) {
 		register id v1 = X(st->a, e);
@@ -343,6 +339,25 @@ void cfss(stack *st) {
 		contract(st + 1, v1, v2);
 		st[1].val += st[1].v[e];
 		cfss(st + 1);
+	}
+}
+
+void boundlevel(stack *st, id l) {
+
+	value b = bound(st) - totalk(st);
+	chunk tmp[C];
+	memcpy(tmp, st->c, sizeof(chunk) * C);
+	register id popc = MASKPOPCNT(tmp, C);
+	if (l - 1 == 0 || popc == 0) bou = b > bou ? b : bou;
+
+	if (l - 1) for (id i = 0, e = MASKFFS(tmp, C); i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C)) {
+		register id v1 = X(st->a, e);
+		register id v2 = Y(st->a, e);
+		CLEAR(st->c, e);
+		st[1] = st[0];
+		merge(st + 1, v1, v2);
+		contract(st + 1, v1, v2);
+		boundlevel(st + 1, l - 1);
 	}
 }
 
@@ -491,12 +506,15 @@ int main(int argc, char *argv[]) {
 	scalefree(st->a);
 	#endif
 
-	// initialise id values
+	// initialise edge values
 
 	init(seed);
+	value lb = -N; // lower bound for characteristic function
 
-	for (id i = 0; i < E; i++)
-		st->v[i] = nextInt(RANGE * 2) - RANGE;
+	for (id i = 0; i < E; i++) {
+		st->v[i] = nextInt(RANGE * 2) - 14;
+		lb += st->v[i] < 0 ? st->v[i] : 0;
+	}
 
 	#ifdef REORDER
 	reorderedges(st->a, st->v);
@@ -509,10 +527,16 @@ int main(int argc, char *argv[]) {
 	st->val = 0;
 	max = -N;
 	sol = *st;
+
 	#ifdef LIMIT
-	value bou = bound(st) - N;
+	for (id i = 1; i <= BOUNDLEVEL; i++) {
+		bou = -FLT_MAX;
+		ONES(st->c, E, C);
+		boundlevel(st, i);
+	}
 	#endif
 
+	ONES(st->c, E, C);
 	gettimeofday(&t1, NULL);
 	cfss(st);
 	gettimeofday(&t2, NULL);
@@ -520,7 +544,7 @@ int main(int argc, char *argv[]) {
 
 	//printcs(&sol);
 	#ifdef LIMIT
-	printf("%u,%u,%u,%f,%f,%f,%f,%zu\n", N, E, seed, max, bou, max / bou, (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
+	printf("%u,%u,%u,%f,%f,%f,%f,%f,%zu\n", N, E, seed, max, bou, lb, (bou - lb) / (max - lb), (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
 	#else
 	printf("%u,%u,%u,%f,%f,%zu\n", N, E, seed, max, (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
 	#endif
