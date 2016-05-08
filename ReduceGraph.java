@@ -1,3 +1,16 @@
+class Point extends java.awt.Point {
+
+	public Point(int x, int y) {
+
+		super(x, y);
+	}
+
+	public String toString() {
+
+		return String.format("{ %d, %d }", x, y);
+	}
+}
+
 public class ReduceGraph {
 
 	static public void main( String arg[] ) throws java.io.IOException {
@@ -15,9 +28,9 @@ public class ReduceGraph {
 		int e = 0;
 		int[] g = new int[n * n];
 		java.util.ArrayList<Integer> al = new java.util.ArrayList<Integer>(n);
-		java.util.ArrayList<Integer> a = new java.util.ArrayList<Integer>(n * n);
-		a.add(0);
-		a.add(0);
+		java.util.ArrayList<Point> a = new java.util.ArrayList<Point>(n * n);
+		//a.add(0);
+		//a.add(0);
 		al.add(startNode);
 
 		while (i < n) {
@@ -30,8 +43,8 @@ public class ReduceGraph {
 				int k = al.indexOf(nbrs[j]);
 				if (g[i * n + k] == 0) {
 					g[i * n + k] = g[k * n + i] = ++e;
-					a.add(i);
-					a.add(k);
+					Point node = new Point(i, k);
+					a.add(node);
 				}
 			}
 			i++;
@@ -39,7 +52,6 @@ public class ReduceGraph {
 
 		String gs = java.util.Arrays.toString(g).replace('[', '{').replace(']', '}');
 		String as = a.toString().replace('[', '{').replace(']', '}');
-		System.out.println("#define N " + n + "\n#define E " + e + "\n#define SEED " + seed + "\nstatic const edge g[" + n * n + "] = " + gs + ";");
-		System.out.println("static const agent a[" + (2 * (e + 1)) + "] = " + as + ";");
+		System.out.println("#define N " + n + "\n#define E " + e + "\n#define SEED " + seed + "\nstatic const idc a[" + e + "] = " + as + ";");
 	}
 }
