@@ -10,7 +10,7 @@
 #include <immintrin.h>
 
 #ifndef TWITTER
-#define N 17
+#define N 2000
 #define K 2
 #define E (K * N - (K * (K + 1)) / 2)
 #include "types.h"
@@ -20,8 +20,9 @@
 #define C CEILBPC(MAX(N, E))
 
 #define RANGE 10
-//#define REORDER
-//#define LIMIT 100
+#define REORDER
+#define LIMIT 100
+#define BOUNDLEVEL 1
 //#define GAMMA 1.8
 //#define KAPPA(S) (pow(S, GAMMA))
 #include "k.i"

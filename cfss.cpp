@@ -465,8 +465,8 @@ void reorderedges(idc *a, value *v) {
 
 int main(int argc, char *argv[]) {
 
-	/*
 	printf("Tot  = %zu\n", sizeof(stack) * N);
+	/*
 	printf("adj  = %zu\n", sizeof(idc) * N * E);
 	printf("iadj = %zu\n", sizeof(idc) * N * N);
 	printf("a    = %zu\n", sizeof(idc) * N * E);
