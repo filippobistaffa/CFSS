@@ -500,6 +500,7 @@ int main(int argc, char *argv[]) {
 
 	#ifdef TWITTER
 	memcpy(st->a, a, sizeof(idc) * E);
+	id seed = SEED;
 	#else
 	id seed = atoi(argv[1]);
 	init(seed);
