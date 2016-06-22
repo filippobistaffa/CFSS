@@ -109,7 +109,7 @@ void printcs(stack *st) {
                 printf("{ ");
                 for (agent j = 0; j < X(st->s, i); j++)
                 	printf("%s%u%s ", i == st->cs[Y(st->s, i) + j] ? "<" : "", 
-			       1 + st->cs[Y(st->s, i) + j], i == st->cs[Y(st->s, i) + j] ? ">" : "");
+			       st->cs[Y(st->s, i) + j], i == st->cs[Y(st->s, i) + j] ? ">" : "");
                 printf("} = %f\n", cvalue(st, i));
         } while (--m);
 
@@ -225,6 +225,7 @@ int main(int argc, char *argv[]) {
 	cfss(st);
 	gettimeofday(&t2, NULL);
 	free(st);
+	printcs(&sol);
 
 	// Free hash table contents
 
@@ -234,7 +235,6 @@ int main(int argc, char *argv[]) {
 		free(p);
 	}
 
-	//printcs(&sol);
 	printf("%u,%u,%u,%f,%f,%f,%f,%zu\n", N, E, SEED, in, max, (in - max) / in,
 	       (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
 
