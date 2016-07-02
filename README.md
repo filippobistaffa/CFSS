@@ -1,1 +1,1 @@
-# An algorithm to compute the optimal coalition structure restricted by a graph
+# A branch-and-bound algorithm that solves Graph-Constrained Coalition Formation
