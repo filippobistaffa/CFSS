@@ -17,3 +17,7 @@ CFSS must be executed by means of the [`cfss.sh`](https://github.com/filippobist
 -s	Seed
 -m	Parameter m of the Barabasi-Albert model (optional, default m = 1)
 ```
+
+Collective energy purchasing dataset
+----------
+The dataset with the energy profiles used in the above paper is not publicly available. Instead, we provide a sample [`data.csv`](https://github.com/filippobistaffa/CFSS/blob/master/data.csv) file with 10 profiles to show the format of the input data.
