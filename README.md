@@ -4,7 +4,7 @@ CFSS is a Branch and Bound algorithm for Graph-Constrained Coalition Formation. 
 
 Download
 ----------
-CFSS does not require any external library to compile and execute. In order to employ Twitter as network topology, `git clone` the [Twitter GitHub repository](https://github.com/filippobistaffa/twitter) inside CFSS's root directory.
+CFSS requires `g++` to compile, and does not require any external library to execute. In order to employ Twitter as network topology, `java` must be installed on the system, and the [Twitter GitHub repository](https://github.com/filippobistaffa/twitter) must be `git clone`'d inside CFSS's root directory.
 
 Execution
 ----------
