@@ -54,11 +54,16 @@ fi
 
 if [[ $t == "scalefree" ]] ; then
 	g++ -DN=$n -DK=$m -DSEED=$s -Wall -march=native -Ofast -funroll-loops -funsafe-loop-optimizations -falign-functions=16 -falign-loops=16 *.c *.cpp -lm -o cfss
+	rc=$?
 else
 	tmp=`mktemp`
 	java -Xmx4000m -cp .:$wg/* ReduceGraph $basename $n $s > $tmp
 	g++ -DTWITTER -Wall -march=native -Ofast -funroll-loops -funsafe-loop-optimizations -falign-functions=16 -falign-loops=16 -include types.h -include $tmp *.c *.cpp -lm -o cfss
+	rc=$?
 	rm $tmp
 fi
 
-./cfss
+if [[ $rc == 0 ]]
+then
+	./cfss
+fi
