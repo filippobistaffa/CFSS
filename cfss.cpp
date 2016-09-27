@@ -64,11 +64,9 @@ int getedge(const idc *adj, const idc *idxadj, id v1, id v2) {
 __attribute__((always_inline)) inline
 void removeedge(idc *adj, idc *idxadj, id v1, id v2) {
 
-	//printf("removing edge (%u, %u)\n", v1, v2);
 	const id min = MIN(v1, v2);
 	const id max = MAX(v1, v2);
 	const id idx = BINARYSEARCH(adj, idxadj, min, max);
-	//printf("min = %u, idx = %u\n", min, idx);
 	id n = X(idxadj, min) - idx - 1;
 
 	for (id j = min + 1; j < N; j++) {
@@ -76,34 +74,23 @@ void removeedge(idc *adj, idc *idxadj, id v1, id v2) {
 		Y(idxadj, j)--;
 	}
 
-	//printf("moving %u items from %u to %u\n", n, Y(idxadj, min) + idx + 1, Y(idxadj, min) + idx);
 	memmove(adj + Y(idxadj, min) + idx, adj + Y(idxadj, min) + idx + 1, sizeof(idc) * n);
 	X(idxadj, min)--;
-
-	/*for (id i = 0; i < N; i++) {
-		printf("%u = [ ", i);
-		for (id j = 0; j < X(idxadj, i); j++)
-			printf("%u (%u) ", X(adj, j + Y(idxadj, i)), Y(adj, j + Y(idxadj, i)));
-		printf("]\n");
-	}*/
 }
 
-// move edge e (v2, i) -> (v1, i)
+// Move edge e (v2, i) -> (v1, i)
 
 __attribute__((always_inline)) inline
 void moveedge(idc *adj, idc *idxadj, id v1, id v2, id i, id e) {
 
-	//printf("moving edge (%u, %u) -> (%u, %u)\n", v2, i, v1, i);
 	const id minsrc = MIN(v2, i);
 	const id mindst = MIN(v1, i);
 	const id maxsrc = MAX(v2, i);
 	const id maxdst = MAX(v1, i);
 	const id idxsrc = BINARYSEARCH(adj, idxadj, minsrc, maxsrc);		// old index of e in minsrc's list
 	const id idxdst = INSERTIONORDERED(adj, idxadj, mindst, maxdst);	// new index of e in mindst's list
-	//printf("minsrc = %u, mindst = %u, idxsrc = %u, idxdst = %u\n", minsrc, mindst, idxsrc, idxdst);
 
 	if (minsrc == mindst) {
-		//printf("moving within same agent\n");
 		X(adj, Y(idxadj, minsrc) + idxsrc) = maxdst;
 		#define LTX(X, Y) ((*(X)).x < (*(Y)).x)
 		QSORT(idc, adj + Y(idxadj, minsrc), X(idxadj, minsrc), LTX);
@@ -119,12 +106,7 @@ void moveedge(idc *adj, idc *idxadj, id v1, id v2, id i, id e) {
 				Y(idxadj, j)--;
 			}
 
-			//printf("moving %u items from %u to %u\n", n, Y(idxadj, minsrc) + idxsrc + 1, Y(idxadj, minsrc) + idxsrc);
-			//for (id i = 0; i < E; i++) printf("%u-%u,", X(adj, i), Y(adj, i));
-			//puts("");
 			memmove(adj + Y(idxadj, minsrc) + idxsrc, adj + Y(idxadj, minsrc) + idxsrc + 1, sizeof(idc) * n);
-			//for (id i = 0; i < E; i++) printf("%u-%u,", X(adj, i), Y(adj, i));
-			//puts("");
 			Y(idxadj, mindst)--;
 
 		} else { // move forwards
@@ -137,7 +119,6 @@ void moveedge(idc *adj, idc *idxadj, id v1, id v2, id i, id e) {
 				Y(idxadj, j)++;
 			}
 
-			//printf("n = %u\n", n);
 			memmove(adj + Y(idxadj, mindst) + idxdst + 1, adj + Y(idxadj, mindst) + idxdst, sizeof(idc) * n);
 			Y(idxadj, minsrc)++;
 		}
@@ -147,13 +128,6 @@ void moveedge(idc *adj, idc *idxadj, id v1, id v2, id i, id e) {
 		X(idxadj, mindst)++;
 		X(idxadj, minsrc)--;
 	}
-
-	/*for (id i = 0; i < N; i++) {
-		printf("%u = [ ", i);
-		for (id j = 0; j < X(idxadj, i); j++)
-			printf("%u (%u) ", X(adj, j + Y(idxadj, i)), Y(adj, j + Y(idxadj, i)));
-		printf("]\n");
-	}*/
 }
 
 // Contract edge between v1 and v2
@@ -161,46 +135,23 @@ void moveedge(idc *adj, idc *idxadj, id v1, id v2, id i, id e) {
 __attribute__((always_inline)) inline
 void contract(stack *st, id v1, id v2) {
 
-	/*for (id i = 0; i < N; i++) {
-		printf("%u = [ ", i);
-		for (id j = 0; j < X(st->idxadj, i); j++)
-			printf("%u (%u) ", X(st->adj, j + Y(st->idxadj, i)), Y(st->adj, j + Y(st->idxadj, i)));
-		printf("]\n");
-	}*/
-
 	register id i, m = st->n[N];
 	register const id *p = st->n + N + 1;
 	register int e, f;
 
 	do if ((i = *(p++)) != v1) {
-		//if ((e = st->g[i * N + v2])) {
-		//printf("i = %u v1 = %u v2 = %u\n", i, v1, v2);
 		if ((e = getedge(st->adj, st->idxadj, i, v2)) >= 0) {
-			//printf("e = %u\n", e + 0);
-			//if ((f = st->g[i * N + v1])) {
 			if ((f = getedge(st->adj, st->idxadj, i, v1)) >= 0) {
-				//printf("f = %u\n", f + 0);
 				if (!GET(st->c, f)) CLEAR(st->c, e);
 				st->v[e] += st->v[f];
 				CLEAR(st->c, f);
 				removeedge(st->adj, st->idxadj, i, v1);
-				//printf("remove edge %u (%u, %u)\n", f, i, v1);
 			}
-			//st->g[i * N + v1] = st->g[v1 * N + i] = e;
 			moveedge(st->adj, st->idxadj, v1, v2, i, e);
 			X(st->a, e) = v1;
 			Y(st->a, e) = i;
 		}}
 	while (--m);
-
-	//removeedge(st->adj, st->idxadj, v1, v2);
-
-	/*for (id i = 0; i < N; i++) {
-		printf("%u = [ ", i);
-		for (id j = 0; j < X(st->idxadj, i); j++)
-			printf("%u (%u) ", X(st->adj, j + Y(st->idxadj, i)), Y(st->adj, j + Y(st->idxadj, i)));
-		printf("]\n");
-	}*/
 }
 
 // Merge coalitions of v1 and v2
@@ -219,62 +170,6 @@ void merge(stack *st, id v1, id v2) {
 	st->s[v1] += st->s[v2];
 	(st->n[N])--;
 }
-
-/*__attribute__((always_inline)) inline
-void merge(stack *st, id v1, id v2) {
-
-	register id a, b, i, j, min = v1, max = v2, *p = st->n + N + 1;
-
-	if (Y(st->s, max) < Y(st->s, min)) {
-		b = max;
-		max = min;
-		min = b;
-	}
-
-	a = X(st->s, min);
-	b = X(st->s, max);
-	max = Y(st->s, max);
-	Y(st->s, v1) = min = Y(st->s, min);
-	X(st->s, v1) = a + b;
-	register id *c = (id *)malloc(sizeof(id) * b);
-	memcpy(c, st->cs + max, sizeof(id) * b);
-	memmove(st->cs + min + a + b, st->cs + min + a, sizeof(id) * (max - min - a));
-	memmove(st->cs + min, st->cs + min, sizeof(id) * a);
-	memcpy(st->cs + min + a, c, sizeof(id) * b);
-	free(c);
-
-	if ((j = st->n[st->n[N] + N]) != v2) {
-		st->n[j] = st->n[v2];
-		st->n[st->n[v2]] = j;
-		st->n[v2] = st->n[N] + N;
-	}
-
-	j = --(st->n[N]);
-
-	do if ((i = *(p++)) != v1) {
-		a = Y(st->s, i);
-		if (a > min && a < max) Y(st->s, i) = a + b;
-	} while (--j);
-}*/
-
-// Print coalition structure
-
-/*void printcs(stack *st) {
-
-	const id *p = st->n + N + 1;
-        id m = st->n[N];
-
-	do {
-		id i = *(p++);
-                printf("{ ");
-                for (id j = 0; j < X(st->s, i); j++)
-                	printf("%s%u%s ", i == st->cs[Y(st->s, i) + j] ? "<" : "",
-			       st->cs[Y(st->s, i) + j], i == st->cs[Y(st->s, i) + j] ? ">" : "");
-                printf("}");
-        } while (--m);
-
-	puts("");
-}*/
 
 __attribute__((always_inline))
 inline value totalk(const stack *st) {
@@ -329,11 +224,7 @@ void cfss(stack *st) {
 	for (id i = 0, e = MASKFFS(tmp, C); !stop && i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C)) {
 		register id v1 = X(st->a, e);
 		register id v2 = Y(st->a, e);
-		//CLEAR(st->c, st->g[v1 * N + v2]);
-		//printf("%lu\n", st->c[0]);
-		//printf("clearing %u\n", e);
 		CLEAR(st->c, e);
-		//printf("%lu\n", st->c[0]);
 		st[1] = st[0];
 		merge(st + 1, v1, v2);
 		contract(st + 1, v1, v2);
@@ -361,43 +252,46 @@ void boundlevel(stack *st, id l) {
 	}
 }
 
-inline void createedge(idc *a, id v1, id v2, id e) {
+__attribute__((always_inline)) inline
+void createedge(idc *a, value *v, id v1, id v2, id e, value w) {
 
 	X(a, e) = v1;
 	Y(a, e) = v2;
+	v[e] = w;
 }
 
-#ifndef TWITTER
-void scalefree(idc *a) {
+#ifdef M
+void scalefree(idc *a, value *v) {
 
+	id k = 0;
 	unsigned deg[N] = {0};
-	register uint_fast64_t d, i, j, h, k = 0, q, t = 0;
-	register int p;
 
-	for (i = 1; i <= K; i++) {
-		for (j = 0; j < i; j++) {
-			createedge(a, i, j, k++);
+	for (id i = 1; i <= M; i++) {
+		for (id j = 0; j < i; j++) {
+			createedge(a, v, i, j, k++, RANDOMVALUE);
 			deg[i]++;
 			deg[j]++;
 		}
 	}
 
-	for (i = K + 1; i < N; i++) {
+	id t = 0;
+
+	for (id i = M + 1; i < N; i++) {
 		t &= ~((1ULL << i) - 1);
-		for (j = 0; j < K; j++) {
-			d = 0;
-			for (h = 0; h < i; h++)
+		for (id j = 0; j < M; j++) {
+			id d = 0;
+			for (id h = 0; h < i; h++)
 				if (!((t >> h) & 1)) d += deg[h];
 			if (d > 0) {
-				p = nextInt(d);
-				q = 0;
+				int p = nextInt(d);
+				id q = 0;
 				while (p >= 0) {
 					if (!((t >> q) & 1)) p = p - deg[q];
 					q++;
 				}
 				q--;
 				t |= 1ULL << q;
-				createedge(a, i, q, k++);
+				createedge(a, v, i, q, k++, RANDOMVALUE);
 				deg[i]++;
 				deg[q]++;
 			}
@@ -433,13 +327,6 @@ void createadj(stack *st) {
 
 	for (id i = 0; i < N; i++)
 		QSORT(idc, st->adj + Y(st->idxadj, i), X(st->idxadj, i), LTX);
-
-	/*for (id i = 0; i < N; i++) {
-		printf("%u = [ ", i);
-		for (id j = 0; j < X(st->idxadj, i); j++)
-			printf("%u (%u) ", X(st->adj, j + Y(st->idxadj, i)), Y(st->adj, j + Y(st->idxadj, i)));
-		printf("]\n");
-	}*/
 }
 
 void reorderedges(idc *a, value *v) {
@@ -460,12 +347,12 @@ void reorderedges(idc *a, value *v) {
         QSORT(value, v, E, GT);
 
 	for (id i = 0; i < E; i++)
-		createedge(a, evb[i].v1, evb[i].v2, i);
+		createedge(a, v, evb[i].v1, evb[i].v2, i, v[i]);
 }
 
 int main(int argc, char *argv[]) {
 
-	printf("Tot  = %zu\n", sizeof(stack) * N);
+	printf("Stack size = %zu bytes\n", sizeof(stack) * N);
 	/*
 	printf("adj  = %zu\n", sizeof(idc) * N * E);
 	printf("iadj = %zu\n", sizeof(idc) * N * N);
@@ -474,15 +361,6 @@ int main(int argc, char *argv[]) {
 	printf("E    = %u\n", E);
 	printf("d    = %f\n", (double)E / (N * N));
 	*/
-
-	//exit(0);
-
-	#ifndef TWITTER
-	if (argc != 2) {
-		fprintf(stderr, "Usage: cfss seed\n");
-		exit(1);
-	}
-	#endif
 
 	stack *st = (stack *)malloc(sizeof(stack) * N);
 	if (!st) { puts("Error allocating stack"); exit(1); }
@@ -496,33 +374,38 @@ int main(int argc, char *argv[]) {
 
 	ONES(st->c, E, C);
 
-	// Initialise graph
+	// Create graph
 
-	#ifdef TWITTER
-	memcpy(st->a, a, sizeof(idc) * E);
-	id seed = SEED;
-	#else
+	#ifdef M
 	id seed = atoi(argv[1]);
 	init(seed);
-	scalefree(st->a);
+	scalefree(st->a, st->v);
 	#endif
 
-	// initialise edge values
+	#ifdef DEBUG
+	puts("\nEdges:");
+	for (id i = 0; i < E; i++)
+		printf("%u: (%u, %u) = %f\n", i, X(st->a, i), Y(st->a, i), st->v[i]);
+	#endif
 
-	init(seed);
-	value lb = -N; // lower bound for characteristic function
+	// Compute lower bound for characteristic function
 
-	for (id i = 0; i < E; i++) {
-		st->v[i] = nextInt(RANGE * 2) - 14;
+	#ifdef LIMIT
+	value lb = -N;
+	for (id i = 0; i < E; i++)
 		lb += st->v[i] < 0 ? st->v[i] : 0;
-	}
+	#endif
 
 	#ifdef REORDER
 	reorderedges(st->a, st->v);
+	#ifdef DEBUG
+	puts("\nReordered edges:");
+	for (id i = 0; i < E; i++)
+		printf("%u: (%u, %u) = %f\n", i, X(st->a, i), Y(st->a, i), st->v[i]);
+	#endif
 	#endif
 
-	//for (id i = 0; i < E; i++)
-	//	printf("%u: (%u, %u) = %f\n", i, X(st->a, i), Y(st->a, i), st->v[i]);
+	exit(1);
 
 	createadj(st);
 	st->val = 0;
@@ -545,9 +428,9 @@ int main(int argc, char *argv[]) {
 
 	//printcs(&sol);
 	#ifdef LIMIT
-	printf("%u,%u,%u,%f,%f,%f,%f,%f,%zu\n", N, E, seed, max, bou, lb, (bou - lb) / (max - lb), (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
+	printf("%u,%u,%s,%f,%f,%f,%f,%f,%zu\n", N, E, argv[1], max, bou, lb, (bou - lb) / (max - lb), (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
 	#else
-	printf("%u,%u,%u,%f,%f,%zu\n", N, E, seed, max, (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
+	printf("%u,%u,%s,%f,%f,%zu\n", N, E, argv[1], max, (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
 	#endif
 
 	return 0;
