@@ -25,4 +25,4 @@ Input File Format
 The weighted graph <i>G = (V, E)</i> can be specified as a file via the `-t` parameter. Such file contains the <i>n</i> vertices and <i>e</i> edges of <i>G</i>, according to the following format.
 
   * <i>n</i> lines containing the weights of the <i>n</i> auto-edges (i.e., one for each agent) in <i>G</i>. Auto-edges allow to have singletons with non-zero values and they are optional (i.e., their weights can be 0).
-  * <i>e</i> lines (i.e., one for each weighted edge) containing the indices of the incident vertices followed by the weight of the edge.
+  * <i>e</i> lines containing, for each of the <i>e</i> edges, the indices of the incident vertices followed by the weight of the edge.
