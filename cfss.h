@@ -15,7 +15,7 @@
 #ifdef M
 #define RANGE 10
 #define E (M * N - (M * (M + 1)) / 2)
-#define RANDOMVALUE (nextInt(RANGE * 2) - 14)
+#define RANDOMVALUE (nextInt(RANGE * 2) - RANGE)
 #endif
 
 #define CONTAINS(V, I) ((V)[I] <= (V)[N] + N)
@@ -24,7 +24,8 @@
 //#define GAMMA 1.8
 //#define KAPPA(S) (pow(S, GAMMA))
 #include "k.i"
-#define KAPPA(S) (lookup[S])
+#define KAPPA(S) 0
+//#define KAPPA(S) (lookup[S])
 
 #include "iqsort.h"
 #include "random.h"
@@ -32,8 +33,8 @@
 
 typedef struct {
 	idc a[E], idxadj[N], adj[E];
+	value v[E], sing[N], val;
 	id n[2 * N + 1], s[N];
-	value v[E], val;
 	chunk c[C];
 } stack;
 

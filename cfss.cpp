@@ -167,6 +167,7 @@ void merge(stack *st, id v1, id v2) {
 		st->n[v2] = st->n[N] + N;
 	}
 
+	st->sing[v1] += st->sing[v2];
 	st->s[v1] += st->s[v2];
 	(st->n[N])--;
 }
@@ -175,6 +176,8 @@ __attribute__((always_inline))
 inline value totalk(const stack *st) {
 
 	value k = 0;
+
+	#if KAPPA(S) != 0
 	const id *p = st->n + N + 1;
         id m = st->n[N];
 
@@ -182,6 +185,7 @@ inline value totalk(const stack *st) {
 		id i = *(p++);
 		k += KAPPA(st->s[i]);
         } while (--m);
+	#endif
 
 	return k;
 }
@@ -203,8 +207,8 @@ value bound(const stack *st) {
 void cfss(stack *st) {
 
 	count++;
-	//printcs(st);
 
+	printf("val = %f\n", st->val);
 	const value k = totalk(st);
 	if (st->val - k > max) { max = st->val - k; sol = *st; }
 
@@ -238,7 +242,7 @@ void boundlevel(stack *st, id l) {
 	value b = bound(st) - totalk(st);
 	chunk tmp[C];
 	memcpy(tmp, st->c, sizeof(chunk) * C);
-	register id popc = MASKPOPCNT(tmp, C);
+	id popc = MASKPOPCNT(tmp, C);
 	if (l - 1 == 0 || popc == 0) bou = b > bou ? b : bou;
 
 	if (l - 1) for (id i = 0, e = MASKFFS(tmp, C); i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C)) {
@@ -350,9 +354,17 @@ void reorderedges(idc *a, value *v) {
 		createedge(a, v, evb[i].v1, evb[i].v2, i, v[i]);
 }
 
+void printcs(chunk *c, idc *a) {
+
+	puts("Contracted edges:");
+	id popc = MASKPOPCNT(c, C);
+	for (id i = 0, e = MASKFFS(c, C); i < popc; i++, e = MASKCLEARANDFFS(c, e, C))
+		printf("%u: (%u, %u)\n", e, X(a, e), Y(a, e));
+}
+
 int main(int argc, char *argv[]) {
 
-	printf("Stack size = %zu bytes\n", sizeof(stack) * N);
+	//printf("Stack size = %zu bytes\n", sizeof(stack) * N);
 	/*
 	printf("adj  = %zu\n", sizeof(idc) * N * E);
 	printf("iadj = %zu\n", sizeof(idc) * N * N);
@@ -373,6 +385,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	ONES(st->c, E, C);
+	st->val = 0;
 
 	// Create graph
 
@@ -380,9 +393,31 @@ int main(int argc, char *argv[]) {
 	id seed = atoi(argv[1]);
 	init(seed);
 	scalefree(st->a, st->v);
+	memset(st->sing, 0, sizeof(value) * N);
+	#else
+	FILE *f = fopen(argv[1], "r");
+	for (id i = 0; i < N; i++) {
+		fscanf(f, "%f", st->sing + i);
+		st->val += st->sing[i];
+	}
+	for (id i = 0; i < E; i++)
+		fscanf(f, "%u %u %f", &X(st->a, i), &Y(st->a, i), st->v + i);
+	fclose(f);
+	#endif
+
+	max = st->val;
+
+	#ifdef DOT
+	puts("graph G {");
+	for (id i = 0; i < E; i++)
+		printf("\t%u -- %u;\n", X(st->a, i), Y(st->a, i));
+	puts("}\n");
 	#endif
 
 	#ifdef DEBUG
+	puts("Singletons:");
+	for (id i = 0; i < N; i++)
+		printf("%u = %f\n", i, st->sing[i]);
 	puts("\nEdges:");
 	for (id i = 0; i < E; i++)
 		printf("%u: (%u, %u) = %f\n", i, X(st->a, i), Y(st->a, i), st->v[i]);
@@ -390,11 +425,11 @@ int main(int argc, char *argv[]) {
 
 	// Compute lower bound for characteristic function
 
-	#ifdef LIMIT
+	/*#ifdef LIMIT
 	value lb = -N;
 	for (id i = 0; i < E; i++)
 		lb += st->v[i] < 0 ? st->v[i] : 0;
-	#endif
+	#endif*/
 
 	#ifdef REORDER
 	reorderedges(st->a, st->v);
@@ -402,23 +437,20 @@ int main(int argc, char *argv[]) {
 	puts("\nReordered edges:");
 	for (id i = 0; i < E; i++)
 		printf("%u: (%u, %u) = %f\n", i, X(st->a, i), Y(st->a, i), st->v[i]);
+	puts("");
 	#endif
 	#endif
-
-	exit(1);
 
 	createadj(st);
-	st->val = 0;
-	max = -N;
 	sol = *st;
 
-	#ifdef LIMIT
+	/*#ifdef LIMIT
 	for (id i = 1; i <= BOUNDLEVEL; i++) {
-		bou = -FLT_MAX;
+		bou = FLT_MAX;
 		ONES(st->c, E, C);
 		boundlevel(st, i);
 	}
-	#endif
+	#endif*/
 
 	ONES(st->c, E, C);
 	gettimeofday(&t1, NULL);
@@ -426,11 +458,15 @@ int main(int argc, char *argv[]) {
 	gettimeofday(&t2, NULL);
 	free(st);
 
-	//printcs(&sol);
+	#ifdef CSV
 	#ifdef LIMIT
 	printf("%u,%u,%s,%f,%f,%f,%f,%f,%zu\n", N, E, argv[1], max, bou, lb, (bou - lb) / (max - lb), (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
 	#else
 	printf("%u,%u,%s,%f,%f,%zu\n", N, E, argv[1], max, (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
+	#endif
+	#else
+	printf("Optimal value = %f\n", max);
+	printcs(sol.c, st->a);
 	#endif
 
 	return 0;

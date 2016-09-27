@@ -1,6 +1,9 @@
 // Enable debug messages
 #define DEBUG
 
+// Print DOT representation of graph
+#define DOT
+
 // Reorder edges according to weights
 #define REORDER
 

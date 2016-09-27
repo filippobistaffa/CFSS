@@ -36,7 +36,10 @@ public class ReduceGraph {
 			i++;
 		}
 
+		for (i = 0; i < n; i++)
+			System.out.println("0");
+
 		for (i = 0; i < e; i++)
-			System.out.format("%d %d %d\n", a.get(2 * i), a.get(2 * i + 1), r.nextInt(RANGE * 2) - 14);
+			System.out.format("%d %d %d\n", a.get(2 * i), a.get(2 * i + 1), r.nextInt(RANGE * 2) - RANGE);
 	}
 }
