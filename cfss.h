@@ -35,7 +35,7 @@ typedef struct {
 	idc a[E], idxadj[N], adj[E];
 	value v[E], sing[N], val;
 	id n[2 * N + 1], s[N];
-	chunk c[C];
+	chunk c[C], e[C];
 } stack;
 
 #endif /* CFSS_H_ */

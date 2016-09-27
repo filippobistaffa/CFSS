@@ -52,12 +52,9 @@ unsigned insertionordered(id x, const idc *buf, unsigned n) {
 __attribute__((always_inline)) inline
 int getedge(const idc *adj, const idc *idxadj, id v1, id v2) {
 
-	//printf("looking for edge (%u, %u)\n", v1, v2);
 	const id min = MIN(v1, v2);
 	const id max = MAX(v1, v2);
 	const id idx = BINARYSEARCH(adj, idxadj, min, max);
-	//printf("idx = %u \n", idx);
-	//printf("%d\n", (idx > X(idxadj, min)) ? -1 : Y(adj, idx + Y(idxadj, min)));
 	return (idx > X(idxadj, min)) ? -1 : Y(adj, idx + Y(idxadj, min));
 }
 
