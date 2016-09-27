@@ -207,8 +207,6 @@ value bound(const stack *st) {
 void cfss(stack *st) {
 
 	count++;
-
-	printf("val = %f\n", st->val);
 	const value k = totalk(st);
 	if (st->val - k > max) { max = st->val - k; sol = *st; }
 
@@ -357,8 +355,12 @@ void reorderedges(idc *a, value *v) {
 void printcs(chunk *c, idc *a) {
 
 	puts("Contracted edges:");
-	id popc = MASKPOPCNT(c, C);
-	for (id i = 0, e = MASKFFS(c, C); i < popc; i++, e = MASKCLEARANDFFS(c, e, C))
+	chunk tmp[C];
+	ONES(tmp, E, C);
+	MASKANDNOT(tmp, c, tmp, C);
+	id popc = MASKPOPCNT(tmp, C);
+
+	for (id i = 0, e = MASKFFS(tmp, C); i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C))
 		printf("%u: (%u, %u)\n", e, X(a, e), Y(a, e));
 }
 
@@ -442,7 +444,7 @@ int main(int argc, char *argv[]) {
 	#endif
 
 	createadj(st);
-	sol = *st;
+	stack in = sol = *st;
 
 	/*#ifdef LIMIT
 	for (id i = 1; i <= BOUNDLEVEL; i++) {
@@ -465,8 +467,9 @@ int main(int argc, char *argv[]) {
 	printf("%u,%u,%s,%f,%f,%zu\n", N, E, argv[1], max, (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
 	#endif
 	#else
+
 	printf("Optimal value = %f\n", max);
-	printcs(sol.c, st->a);
+	printcs(sol.c, in.a);
 	#endif
 
 	return 0;
