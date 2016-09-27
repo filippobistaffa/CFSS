@@ -172,23 +172,22 @@ void merge(stack *st, id v1, id v2) {
 	(st->n[N])--;
 }
 
+#if KAPPA(S) != 0
 __attribute__((always_inline))
 inline value totalk(const stack *st) {
 
 	value k = 0;
-
-	#if KAPPA(S) != 0
 	const id *p = st->n + N + 1;
-        id m = st->n[N];
+	id m = st->n[N];
 
 	do {
 		id i = *(p++);
 		k += KAPPA(st->s[i]);
-        } while (--m);
-	#endif
+	} while (--m);
 
 	return k;
 }
+#endif
 
 __attribute__((always_inline)) inline
 value bound(const stack *st) {
@@ -207,7 +206,13 @@ value bound(const stack *st) {
 void cfss(stack *st) {
 
 	count++;
+
+	#if KAPPA(S) != 0
 	const value k = totalk(st);
+	#else
+	const value k = 0;
+	#endif
+
 	if (st->val - k > max) { max = st->val - k; sol = *st; }
 
 	#ifdef LIMIT
@@ -224,9 +229,10 @@ void cfss(stack *st) {
 	register id popc = MASKPOPCNT(tmp, C);
 
 	for (id i = 0, e = MASKFFS(tmp, C); !stop && i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C)) {
-		register id v1 = X(st->a, e);
-		register id v2 = Y(st->a, e);
+		id v1 = X(st->a, e);
+		id v2 = Y(st->a, e);
 		CLEAR(st->c, e);
+		SET(st->e, e);
 		st[1] = st[0];
 		merge(st + 1, v1, v2);
 		contract(st + 1, v1, v2);
@@ -237,7 +243,11 @@ void cfss(stack *st) {
 
 void boundlevel(stack *st, id l) {
 
+	#if KAPPA(S) != 0
 	value b = bound(st) - totalk(st);
+	#else
+	value b = bound(st);
+	#endif
 	chunk tmp[C];
 	memcpy(tmp, st->c, sizeof(chunk) * C);
 	id popc = MASKPOPCNT(tmp, C);
@@ -352,16 +362,13 @@ void reorderedges(idc *a, value *v) {
 		createedge(a, v, evb[i].v1, evb[i].v2, i, v[i]);
 }
 
-void printcs(chunk *c, idc *a) {
+void printsol(chunk *e, idc *a) {
 
-	puts("Contracted edges:");
-	chunk tmp[C];
-	ONES(tmp, E, C);
-	MASKANDNOT(tmp, c, tmp, C);
-	id popc = MASKPOPCNT(tmp, C);
+	puts("Solution's spanning forest:");
+	id popc = MASKPOPCNT(e, C);
 
-	for (id i = 0, e = MASKFFS(tmp, C); i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C))
-		printf("%u: (%u, %u)\n", e, X(a, e), Y(a, e));
+	for (id i = 0, j = MASKFFS(e, C); i < popc; i++, j = MASKCLEARANDFFS(e, j, C))
+		printf("%u: (%u, %u)\n", j, X(a, j), Y(a, j));
 }
 
 int main(int argc, char *argv[]) {
@@ -378,7 +385,7 @@ int main(int argc, char *argv[]) {
 
 	stack *st = (stack *)malloc(sizeof(stack) * N);
 	if (!st) { puts("Error allocating stack"); exit(1); }
-	memset(st->c, 0, sizeof(chunk) * C);
+	memset(st->e, 0, sizeof(chunk) * C);
 	st->n[N] = N;
 
 	for (id i = 0; i < N; i++) {
@@ -423,6 +430,7 @@ int main(int argc, char *argv[]) {
 	puts("\nEdges:");
 	for (id i = 0; i < E; i++)
 		printf("%u: (%u, %u) = %f\n", i, X(st->a, i), Y(st->a, i), st->v[i]);
+	puts("");
 	#endif
 
 	// Compute lower bound for characteristic function
@@ -436,7 +444,7 @@ int main(int argc, char *argv[]) {
 	#ifdef REORDER
 	reorderedges(st->a, st->v);
 	#ifdef DEBUG
-	puts("\nReordered edges:");
+	puts("Reordered edges:");
 	for (id i = 0; i < E; i++)
 		printf("%u: (%u, %u) = %f\n", i, X(st->a, i), Y(st->a, i), st->v[i]);
 	puts("");
@@ -444,7 +452,9 @@ int main(int argc, char *argv[]) {
 	#endif
 
 	createadj(st);
-	stack in = sol = *st;
+	sol = *st;
+	idc in[E];
+	memcpy(in, sol.a, sizeof(idc) * E);
 
 	/*#ifdef LIMIT
 	for (id i = 1; i <= BOUNDLEVEL; i++) {
@@ -467,9 +477,9 @@ int main(int argc, char *argv[]) {
 	printf("%u,%u,%s,%f,%f,%zu\n", N, E, argv[1], max, (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
 	#endif
 	#else
-
+	printf("Visited nodes = %zu\n", count);
 	printf("Optimal value = %f\n", max);
-	printcs(sol.c, in.a);
+	printsol(sol.e, in);
 	#endif
 
 	return 0;
