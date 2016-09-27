@@ -415,8 +415,10 @@ int main(int argc, char *argv[]) {
 
 	#ifdef DOT
 	puts("graph G {");
+	for (id i = 0; i < N; i++)
+		printf("\t%u -- %u [label = \"%.2f\"];\n", i, i, st->sing[i]);
 	for (id i = 0; i < E; i++)
-		printf("\t%u -- %u;\n", X(st->a, i), Y(st->a, i));
+		printf("\t%u -- %u [label = \"%.2f\"];\n", X(st->a, i), Y(st->a, i), st->v[i]);
 	puts("}\n");
 	#endif
 
