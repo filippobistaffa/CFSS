@@ -240,8 +240,11 @@ void cfss(stack *st) {
 		id v1 = X(st->a, e);
 		id v2 = Y(st->a, e);
 		CLEAR(st->c, e);
-		SET(st->e, e);
+		#ifdef K
+		if (st->s[v1] + st->s[v2] > K) continue;
+		#endif
 		st[1] = st[0];
+		SET((st + 1)->e, e);
 		merge(st + 1, v1, v2);
 		contract(st + 1, v1, v2);
 		st[1].val += st[1].v[e];

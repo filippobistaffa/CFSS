@@ -1,3 +1,6 @@
+// Maximum coalition size
+//#define K 4
+
 // Enable debug messages
 #define DEBUG
 
