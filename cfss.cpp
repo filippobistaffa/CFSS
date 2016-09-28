@@ -477,6 +477,7 @@ int main(int argc, char *argv[]) {
 	#endif
 	#else
 	printf("Visited nodes = %zu\n", count);
+	printf("Elapsed time = %f\n", (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec);
 	printf("Optimal value = %f\n", max);
 	printsol(sol.e, in);
 	#endif
