@@ -1,6 +1,6 @@
-CFSS: a Branch and Bound algorithm for Graph-Constrained Coalition Formation
+CFSS: a Branch and Bound algorithm for GCCF
 ===================
-CFSS is a Branch and Bound algorithm for Graph-Constrained Coalition Formation. CFSS has been presented by Filippo Bistaffa, Alessandro Farinelli, Jesús Cerquides, Juan Rodríguez-Aguilar, and Sarvapali D. Ramchurn in “[Anytime Coalition Structure Generation on Synergy Graphs](http://www.aamas-conference.org/Proceedings/aamas2014/aamas/p13.pdf)”, Proceedings of the 13th International Conference on Autonomous Agents and Multiagent Systems (AAMAS), pages 13−20, 2014, IFAAMAS.
+CFSS is a Branch and Bound algorithm for Graph-Constrained Coalition Formation (GCCF). CFSS has been presented by Filippo Bistaffa, Alessandro Farinelli, Jesús Cerquides, Juan Rodríguez-Aguilar, and Sarvapali D. Ramchurn in “[Anytime Coalition Structure Generation on Synergy Graphs](http://www.aamas-conference.org/Proceedings/aamas2014/aamas/p13.pdf)”, Proceedings of the 13th International Conference on Autonomous Agents and Multiagent Systems (AAMAS), pages 13−20, 2014, IFAAMAS.
 
 Download
 ----------
