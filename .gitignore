@@ -3,3 +3,5 @@ cobj
 dep
 cfss
 twitter
+*.dot
+*.png
