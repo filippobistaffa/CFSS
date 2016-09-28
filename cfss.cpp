@@ -375,7 +375,7 @@ void reorderedges(idc *a, value *v) {
 
 void printsol(chunk *e, idc *a) {
 
-	puts("Solution spanning forest:");
+	puts("\nSolution spanning forest:");
 	chunk tmp[C];
 	memcpy(tmp, e, sizeof(chunk) * C);
 	id popc = MASKPOPCNT(tmp, C);
@@ -406,7 +406,7 @@ void printcs(chunk *e, idc *a) {
 		cs[idx[v1]].insert(cs[v2].begin(), cs[v2].end());
 	}
 
-	puts("Solution coalition structure:");
+	puts("\nSolution coalition structure:");
 	for (id i = 0; i < N; i++) if (idx[i] == i) {
 		printf("[ ");
 		for (std::set<id>::iterator it = cs[i].begin(); it != cs[i].end(); ++it) printf("%u ", *it);
