@@ -16,7 +16,7 @@ while getopts ":t:n:s:d:m:p:" o; do
 	t)
 		t=${OPTARG}
 		if ! [[ $t == "scalefree" || $t == "twitter" ]] ; then
-			if [ ! -f "$1" ]
+			if [ ! -f "$t" ]
 			then
 				echo -e "${red}Input file \"$t\" not found!${nc}\n"
 				usage
@@ -69,11 +69,12 @@ twitter)
 	arg=`mktemp`
 	java -Xmx4000m -cp .:$wg/* ReduceGraph $basename $n $s | grep -v WARN > $arg
 	e=`cat $arg | wc -l`
+	e=$(( $e - $n ))
 	echo "#define E $e" >> $tmp
-	cat $arg
 	;;
 *)
-	e=`cat $arg | wc -l $t`
+	e=`cat "$t" | wc -l`
+	e=$(( $e - $n ))
 	echo "#define E $e" >> $tmp
 	arg=$t
 	;;
