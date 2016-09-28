@@ -459,15 +459,6 @@ int main(int argc, char *argv[]) {
 
 	max = st->val;
 
-	#ifdef DOT
-	puts("graph G {");
-	for (id i = 0; i < N; i++)
-		printf("\t%u -- %u [label = \"%.2f\"];\n", i, i, st->sing[i]);
-	for (id i = 0; i < E; i++)
-		printf("\t%u -- %u [label = \"%.2f\"];\n", X(st->a, i), Y(st->a, i), st->v[i]);
-	puts("}\n");
-	#endif
-
 	#ifdef DEBUG
 	puts("Singletons:");
 	for (id i = 0; i < N; i++)
@@ -494,6 +485,15 @@ int main(int argc, char *argv[]) {
 		printf("%u: (%u, %u) = %f\n", i, X(st->a, i), Y(st->a, i), st->v[i]);
 	puts("");
 	#endif
+	#endif
+
+	#ifdef DOT
+	puts("graph G {");
+	for (id i = 0; i < N; i++)
+		printf("\t%u -- %u [label = \"%.2f\"];\n", i, i, st->sing[i]);
+	for (id i = 0; i < E; i++)
+		printf("\t%u -- %u [label = \"%u: %.2f\"];\n", X(st->a, i), Y(st->a, i), i, st->v[i]);
+	puts("}\n");
 	#endif
 
 	createadj(st);
