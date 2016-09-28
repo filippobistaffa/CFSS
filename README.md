@@ -12,10 +12,10 @@ Execution
 ----------
 CFSS must be executed by means of the [`cfss.sh`](https://github.com/filippobistaffa/CFSS/blob/master/cfss.sh) script, i.e.,
 ```
-./cfss.sh -t <scalefree|twitter|filename> -n <#agents> [-s <seed>] [-m <barabasi_m>]
+./cfss.sh -t <scalefree|twitter|filename> [-n <#agents>] [-s <seed>] [-m <barabasi_m>]
 
 -t	Network topology (either scalefree, twitter, or the input filename)
--n	Number of agents
+-n	Number of agents (optional, default n = 10)
 -s	Seed (optional, default s = 0)
 -m	Parameter m of the Barabasi-Albert model (optional, default m = 2)
 ```
