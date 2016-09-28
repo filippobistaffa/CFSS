@@ -375,11 +375,43 @@ void reorderedges(idc *a, value *v) {
 
 void printsol(chunk *e, idc *a) {
 
-	puts("Solution's spanning forest:");
-	id popc = MASKPOPCNT(e, C);
+	puts("Solution spanning forest:");
+	chunk tmp[C];
+	memcpy(tmp, e, sizeof(chunk) * C);
+	id popc = MASKPOPCNT(tmp, C);
 
-	for (id i = 0, j = MASKFFS(e, C); i < popc; i++, j = MASKCLEARANDFFS(e, j, C))
+	for (id i = 0, j = MASKFFS(tmp, C); i < popc; i++, j = MASKCLEARANDFFS(tmp, j, C))
 		printf("%u: (%u, %u)\n", j, X(a, j), Y(a, j));
+}
+
+#include <set>
+void printcs(chunk *e, idc *a) {
+
+	std::set<id> cs[N];
+	id idx[N];
+
+	for (id i = 0; i < N; i++) {
+		idx[i] = i;
+		cs[i].insert(i);
+	}
+
+	chunk tmp[C];
+	memcpy(tmp, e, sizeof(chunk) * C);
+	id popc = MASKPOPCNT(tmp, C);
+
+	for (id i = 0, j = MASKFFS(tmp, C); i < popc; i++, j = MASKCLEARANDFFS(tmp, j, C)) {
+		const id v1 = MIN(X(a, j), Y(a, j));
+		const id v2 = MAX(X(a, j), Y(a, j));
+		for (std::set<id>::iterator it = cs[v2].begin(); it != cs[v2].end(); ++it) idx[*it] = idx[v1];
+		cs[idx[v1]].insert(cs[v2].begin(), cs[v2].end());
+	}
+
+	puts("Solution coalition structure:");
+	for (id i = 0; i < N; i++) if (idx[i] == i) {
+		printf("[ ");
+		for (std::set<id>::iterator it = cs[i].begin(); it != cs[i].end(); ++it) printf("%u ", *it);
+		printf("]\n");
+	}
 }
 
 int main(int argc, char *argv[]) {
@@ -494,6 +526,7 @@ int main(int argc, char *argv[]) {
 	printf("Elapsed time = %f\n", (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec);
 	printf("Optimal value = %f\n", max);
 	printsol(sol.e, in);
+	printcs(sol.e, in);
 	#endif
 
 	return 0;
