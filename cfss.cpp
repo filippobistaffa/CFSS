@@ -6,6 +6,17 @@ value max, bou;
 stack sol;
 bool stop;
 
+#include <iostream>
+template <typename type>
+__attribute__((always_inline)) inline
+void printbuf(const type *buf, unsigned n, const char *name = NULL) {
+
+	if (name) printf("%s = [ ", name);
+	else printf("[ ");
+	while (n--) std::cout << *(buf++) << " ";
+	printf("]\n");
+}
+
 __attribute__((always_inline)) inline
 unsigned binarysearch(id x, const idc *buf, unsigned n) {
 
