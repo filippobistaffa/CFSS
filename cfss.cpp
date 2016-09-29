@@ -453,6 +453,11 @@ int main(int argc, char *argv[]) {
 		#endif
 	}
 
+	#ifdef LEADERS
+	memcpy(st->l, l, sizeof(id) * N);
+	printbuf(st->l, N, "l");
+	#endif
+
 	memset(st->e, 0, sizeof(chunk) * C);
 	ONES(st->c, E, C);
 	ONES(st->r, E, C);

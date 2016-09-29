@@ -24,6 +24,8 @@
 
 #ifndef LEADERS
 #define MAXLEADERS N
+#else
+#include "leaders.h"
 #endif
 
 #ifndef K
