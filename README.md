@@ -10,7 +10,7 @@ CFSS requires `g++` to compile, and does not require any external library to exe
 
 Execution
 ----------
-CFSS must be executed by means of the [`cfss.sh`](https://github.com/filippobistaffa/CFSS/blob/master/cfss.sh) script, i.e.,
+CFSS must be executed by means of the [`cfss.sh`](cfss.sh) script, i.e.,
 ```
 ./cfss.sh -t <scalefree|twitter|filename> [-n <#agents>] [-s <seed>] [-m <barabasi_m>]
 
