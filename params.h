@@ -15,3 +15,9 @@
 
 // Decide at which level to compute the bound
 //#define BOUNDLEVEL 1
+
+// Enable leaders constraints
+//#define LEADERS
+
+// Maximum number of leaders per coalition
+//#define MAXLEADERS 1

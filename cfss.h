@@ -18,6 +18,14 @@
 #define RANDOMVALUE (nextInt(RANGE * 2) - RANGE)
 #endif
 
+#if !defined(LEADERS) && defined(MAXLEADERS)
+#error "MAXLEADERS defined, but LEADERS not enabled"
+#endif
+
+#ifndef LEADERS
+#define MAXLEADERS N
+#endif
+
 #define CONTAINS(V, I) ((V)[I] <= (V)[N] + N)
 #define C CEILBPC(MAX(N, E))
 
@@ -33,9 +41,9 @@
 
 typedef struct {
 	idc a[E], idxadj[N], adj[E];
+	id n[2 * N + 1], s[N], l[N];
 	value v[E], sing[N], val;
-	id n[2 * N + 1], s[N];
-	chunk c[C], e[C];
+	chunk c[C], r[C], e[C];
 } stack;
 
 #endif /* CFSS_H_ */
