@@ -5,7 +5,10 @@
 //#define BOUND
 
 // Enable debug messages
-#define DEBUG
+//#define DEBUG
+
+// Enable CSV output
+#define CSV
 
 // Print DOT representation of graph
 //#define DOT

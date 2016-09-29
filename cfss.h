@@ -26,6 +26,10 @@
 #define MAXLEADERS N
 #endif
 
+#ifndef K
+#define K N
+#endif
+
 #define CONTAINS(V, I) ((V)[I] <= (V)[N] + N)
 #define C CEILBPC(MAX(N, E))
 
