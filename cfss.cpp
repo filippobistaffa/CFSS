@@ -177,6 +177,7 @@ void merge(stack *st, id v1, id v2) {
 
 	st->sing[v1] += st->sing[v2];
 	st->s[v1] += st->s[v2];
+	st->l[v1] += st->l[v2];
 	(st->n[N])--;
 }
 
@@ -230,21 +231,35 @@ void cfss(stack *st) {
 	}
 	#endif
 
-	if (stop || bound(st) - k <= max) return;
+	if (stop) return;
+	#ifdef BOUND
+	if (bound(st) - k <= max) return;
+	#endif
 
-	chunk tmp[C];
+	chunk tmp[C], rt[C];
 	memcpy(tmp, st->c, sizeof(chunk) * C);
-	register id popc = MASKPOPCNT(tmp, C);
+	MASKAND(tmp, st->r, tmp, C);
+	id popc = MASKPOPCNT(tmp, C);
 
 	for (id i = 0, e = MASKFFS(tmp, C); !stop && i < popc; i++, e = MASKCLEARANDFFS(tmp, e, C)) {
+
 		id v1 = X(st->a, e);
 		id v2 = Y(st->a, e);
+
+		// At least one of the coalitions must have a leader
+		if (!(st->l[v1] + st->l[v2])) continue;
+
+		memcpy(rt, st->r, sizeof(chunk) * C);
+		CLEAR(st->r, e);
+		CLEAR(tmp, e);
+
+		// Must not exceed the maximum coalition size and the maximum number of leaders
+		if (st->s[v1] + st->s[v2] > K || st->l[v1] + st->l[v2] > MAXLEADERS) continue;
+
 		CLEAR(st->c, e);
-		#ifdef K
-		if (st->s[v1] + st->s[v2] > K) continue;
-		#endif
 		st[1] = st[0];
 		SET((st + 1)->e, e);
+		memcpy(st[1].r, rt, sizeof(chunk) * C);
 		merge(st + 1, v1, v2);
 		contract(st + 1, v1, v2);
 		st[1].val += st[1].v[e];
@@ -428,15 +443,19 @@ int main(int argc, char *argv[]) {
 
 	stack *st = (stack *)malloc(sizeof(stack) * N);
 	if (!st) { puts("Error allocating stack"); exit(1); }
-	memset(st->e, 0, sizeof(chunk) * C);
 	st->n[N] = N;
 
 	for (id i = 0; i < N; i++) {
 		st->n[st->n[i] = N + i + 1] = i;
 		st->s[i] = 1;
+		#ifndef LEADERS
+		st->l[i] = 1;
+		#endif
 	}
 
+	memset(st->e, 0, sizeof(chunk) * C);
 	ONES(st->c, E, C);
+	ONES(st->r, E, C);
 	st->val = 0;
 
 	// Create graph
