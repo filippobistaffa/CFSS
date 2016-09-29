@@ -1,11 +1,14 @@
 // Maximum coalition size
-//#define K 4
+//#define K 5
+
+// Enable branch and bound
+//#define BOUND
 
 // Enable debug messages
 #define DEBUG
 
 // Print DOT representation of graph
-#define DOT
+//#define DOT
 
 // Reorder edges according to weights
 #define REORDER
