@@ -415,10 +415,10 @@ void printcs(chunk *e, idc *a) {
 	id popc = MASKPOPCNT(tmp, C);
 
 	for (id i = 0, j = MASKFFS(tmp, C); i < popc; i++, j = MASKCLEARANDFFS(tmp, j, C)) {
-		const id v1 = MIN(X(a, j), Y(a, j));
-		const id v2 = MAX(X(a, j), Y(a, j));
-		for (std::set<id>::iterator it = cs[v2].begin(); it != cs[v2].end(); ++it) idx[*it] = idx[v1];
-		cs[idx[v1]].insert(cs[v2].begin(), cs[v2].end());
+		const id v1 = idx[X(a, j)];
+		const id v2 = idx[Y(a, j)];
+		for (std::set<id>::iterator it = cs[v2].begin(); it != cs[v2].end(); ++it) idx[*it] = v1;
+		cs[v1].insert(cs[v2].begin(), cs[v2].end());
 	}
 
 	puts("\nSolution coalition structure:");
