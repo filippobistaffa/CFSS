@@ -429,6 +429,35 @@ void printcs(chunk *e, idc *a) {
 	}
 }
 
+#include <set>
+void printcsvalue(FILE *csv, chunk *e, idc *a, id *l) {
+
+	std::set<id> cs[N];
+	id idx[N];
+
+	for (id i = 0; i < N; i++) {
+		idx[i] = i;
+		cs[i].insert(i);
+	}
+
+	chunk tmp[C];
+	memcpy(tmp, e, sizeof(chunk) * C);
+	id popc = MASKPOPCNT(tmp, C);
+
+	for (id i = 0, j = MASKFFS(tmp, C); i < popc; i++, j = MASKCLEARANDFFS(tmp, j, C)) {
+		const id v1 = idx[X(a, j)];
+		const id v2 = idx[Y(a, j)];
+		for (std::set<id>::iterator it = cs[v2].begin(); it != cs[v2].end(); ++it) idx[*it] = v1;
+		cs[v1].insert(cs[v2].begin(), cs[v2].end());
+	}
+
+	for (id i = 0; i < N; i++) if (idx[i] == i) {
+		for (std::set<id>::iterator it = cs[i].begin(), penult = --(cs[i].end()); it != penult; ++it)
+			fprintf(csv, "%s%u ", l[*it] ? "*" : "", *it);
+		fprintf(csv, "%s%u\n", l[*(--(cs[i].end()))] ? "*" : "", *(--(cs[i].end())));
+	}
+}
+
 int main(int argc, char *argv[]) {
 
 	//printf("Stack size = %zu bytes\n", sizeof(stack) * N);
@@ -551,6 +580,13 @@ int main(int argc, char *argv[]) {
 	printf("Optimal value = %f\n", max);
 	printsol(sol.e, in);
 	printcs(sol.e, in);
+	#endif
+
+	#ifdef CSVALUE
+	FILE *csv = fopen(CSVALUE, "w+");
+	fprintf(csv, "%u\n%u\n", N, K);
+	printcsvalue(csv, sol.e, in, l);
+	fclose(csv);
 	#endif
 
 	return 0;
