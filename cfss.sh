@@ -77,6 +77,7 @@ twitter)
 	n=`grep -v " " "$t" | wc -l`
 	e=$(( $e - $n ))
 	echo "#define E $e" > $tmp
+	echo "#define LEADERS" >> $tmp
 	arg=$t
 	;;
 esac

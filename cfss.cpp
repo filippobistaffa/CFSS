@@ -482,11 +482,6 @@ int main(int argc, char *argv[]) {
 		#endif
 	}
 
-	#ifdef LEADERS
-	memcpy(st->l, l, sizeof(id) * N);
-	printbuf(st->l, N, "l");
-	#endif
-
 	memset(st->e, 0, sizeof(chunk) * C);
 	ONES(st->c, E, C);
 	ONES(st->r, E, C);
@@ -500,9 +495,17 @@ int main(int argc, char *argv[]) {
 	scalefree(st->a, st->v);
 	memset(st->sing, 0, sizeof(value) * N);
 	#else
+	#define MAXLINE 1000
+	char line[MAXLINE];
 	FILE *f = fopen(argv[1], "r");
 	for (id i = 0; i < N; i++) {
-		fscanf(f, "%f", st->sing + i);
+		fgets(line, MAXLINE, f);
+		char *pch = line;
+		if (*pch == '*') {
+			pch++;
+			st->l[i] = 1;
+		}
+		st->sing[i] = atof(pch);
 		st->val += st->sing[i];
 	}
 	for (id i = 0; i < E; i++)

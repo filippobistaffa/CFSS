@@ -18,14 +18,8 @@
 #define RANDOMVALUE (nextInt(RANGE * 2) - RANGE)
 #endif
 
-#if !defined(LEADERS) && defined(MAXLEADERS)
-#error "MAXLEADERS defined, but LEADERS not enabled"
-#endif
-
-#ifndef LEADERS
+#ifndef MAXLEADERS
 #define MAXLEADERS N
-#else
-#include "leaders.h"
 #endif
 
 #ifndef K
