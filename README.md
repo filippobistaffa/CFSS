@@ -24,5 +24,5 @@ Input File Format
 ----------
 The weighted graph <i>G = (V, E)</i> can be specified as a file via the `-t` parameter. Such file encodes the information about <i>G</i> according to the following format.
 
-  * <i>n</i> lines containing the weights of the <i>n</i> auto-edges (i.e., one for each agent) in <i>G</i>. Auto-edges allow to have singletons with non-zero values and they are optional (i.e., their weights can be 0).
+  * <i>n</i> lines containing the weights of the <i>n</i> auto-edges (i.e., one for each agent) in <i>G</i>. Auto-edges allow to have singletons with non-zero values and they are optional (i.e., their weights can be 0). If the value of the <i>i</i><sup>th</sup> auto-edge is preceded by a `*`, it means that the <i>i</i><sup>th</sup> agent is a <i>leader</i>. In order to form a feasible coalition of size > 1, at least one leader is required. Furthermore, the maximum number of leaders per coalition can be limited by means of the `MAXLEADERS` constant in the [`params.h`](params.h) file.
   * <i>e</i> lines containing, for each of the <i>e</i> edges, the indices of the incident vertices followed by the weight of the edge.
