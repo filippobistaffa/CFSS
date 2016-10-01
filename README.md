@@ -8,7 +8,7 @@ CFSS requires `g++` to compile, and does not require any external library to exe
 
 Execution
 ----------
-CFSS must be executed by means of the [`cfss.sh`](https://github.com/filippobistaffa/CFSS/blob/master/cfss.sh) script, i.e.,
+CFSS must be executed by means of the [`cfss.sh`](cfss.sh) script, i.e.,
 ```
 ./cfss.sh -t <scalefree|twitter> -n <#agents> -s <seed> [-m <barabasi_m>]
 
@@ -20,4 +20,4 @@ CFSS must be executed by means of the [`cfss.sh`](https://github.com/filippobist
 
 Collective energy purchasing dataset
 ----------
-The dataset with the energy profiles used in the above paper is not publicly available. Instead, we provide a sample [`data.csv`](https://github.com/filippobistaffa/CFSS/blob/master/data.csv) file with 10 profiles to show the format of the input data. Specifically, each profile is specified in one line, and it refers to one day of energy consumption, with a measure every 30 minutes (i.e., each line contains 48 measures).
+The dataset with the energy profiles used in the above paper is not publicly available. Instead, we provide a sample [`data.csv`](data.csv) file with 10 profiles to show the format of the input data. Specifically, each profile is specified in one line, and it refers to one day of energy consumption, with a measure every 30 minutes (i.e., each line contains 48 measures).
