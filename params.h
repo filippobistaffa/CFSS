@@ -1,5 +1,5 @@
 // Maximum coalition size
-//#define K 5
+#define K 5
 
 // Enable branch and bound
 //#define BOUND
@@ -8,7 +8,7 @@
 //#define DEBUG
 
 // Enable CSV output
-#define CSV
+//#define CSV
 
 // Print DOT representation of graph
 //#define DOT
@@ -23,7 +23,7 @@
 //#define BOUNDLEVEL 1
 
 // Maximum number of leaders per coalition
-//#define MAXLEADERS 1
+#define MAXLEADERS 1
 
 // Output solution to file
-//#define CSVALUE "PK/test.sol"
+#define CSVALUE "SR-VALUE/test.sol"
