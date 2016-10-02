@@ -569,6 +569,13 @@ int main(int argc, char *argv[]) {
 	gettimeofday(&t1, NULL);
 	cfss(st);
 	gettimeofday(&t2, NULL);
+
+	#ifdef CSVALUE
+	FILE *csv = fopen(CSVALUE, "w+");
+	fprintf(csv, "%u\n%u\n", N, K);
+	printcsvalue(csv, sol.e, in, st->l);
+	fclose(csv);
+	#endif
 	free(st);
 
 	#ifdef CSV
@@ -583,13 +590,6 @@ int main(int argc, char *argv[]) {
 	printf("Optimal value = %f\n", max);
 	printsol(sol.e, in);
 	printcs(sol.e, in);
-	#endif
-
-	#ifdef CSVALUE
-	FILE *csv = fopen(CSVALUE, "w+");
-	fprintf(csv, "%u\n%u\n", N, K);
-	printcsvalue(csv, sol.e, in, l);
-	fclose(csv);
 	#endif
 
 	return 0;
