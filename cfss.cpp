@@ -572,9 +572,11 @@ int main(int argc, char *argv[]) {
 
 	#ifdef CSVALUE
 	FILE *csv = fopen(CSVALUE, "w+");
-	fprintf(csv, "%u\n%u\n", N, K);
-	printcsvalue(csv, sol.e, in, st->l);
-	fclose(csv);
+	if (csv) {
+		fprintf(csv, "%u\n%u\n", N, K);
+		printcsvalue(csv, sol.e, in, st->l);
+		fclose(csv);
+	} else fputs("\033[01;31m" CSVALUE " cannot be written!\033[0m\n\n", stderr);
 	#endif
 	free(st);
 
