@@ -390,13 +390,15 @@ void reorderedges(idc *a, value *v) {
 
 void printsol(chunk *e, idc *a) {
 
-	puts("\nSolution spanning forest:");
+	puts("Solution spanning forest:");
 	chunk tmp[C];
 	memcpy(tmp, e, sizeof(chunk) * C);
 	id popc = MASKPOPCNT(tmp, C);
 
 	for (id i = 0, j = MASKFFS(tmp, C); i < popc; i++, j = MASKCLEARANDFFS(tmp, j, C))
 		printf("%u: (%u, %u)\n", j, X(a, j), Y(a, j));
+
+	puts("");
 }
 
 #include <set>
@@ -421,12 +423,15 @@ void printcs(chunk *e, idc *a) {
 		cs[v1].insert(cs[v2].begin(), cs[v2].end());
 	}
 
-	puts("\nSolution coalition structure:");
+	puts("Solution coalition structure:");
+
 	for (id i = 0; i < N; i++) if (idx[i] == i) {
 		printf("[ ");
 		for (std::set<id>::iterator it = cs[i].begin(); it != cs[i].end(); ++it) printf("%u ", *it);
 		printf("]\n");
 	}
+
+	puts("");
 }
 
 #include <set>
@@ -587,11 +592,11 @@ int main(int argc, char *argv[]) {
 	printf("%u,%u,%s,%f,%f,%zu\n", N, E, argv[1], max, (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec, count);
 	#endif
 	#else
+	printsol(sol.e, in);
+	printcs(sol.e, in);
 	printf("Visited nodes = %zu\n", count);
 	printf("Elapsed time = %f\n", (double)(t2.tv_usec - t1.tv_usec) / 1e6 + t2.tv_sec - t1.tv_sec);
 	printf("Optimal value = %f\n", max);
-	printsol(sol.e, in);
-	printcs(sol.e, in);
 	#endif
 
 	return 0;
