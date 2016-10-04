@@ -434,8 +434,7 @@ void printcs(chunk *e, idc *a) {
 	puts("");
 }
 
-#include <set>
-void printcsvalue(FILE *csv, chunk *e, idc *a, id *l) {
+void writesol(FILE *solf, chunk *e, idc *a, id *l) {
 
 	std::set<id> cs[N];
 	id idx[N];
@@ -458,8 +457,8 @@ void printcsvalue(FILE *csv, chunk *e, idc *a, id *l) {
 
 	for (id i = 0; i < N; i++) if (idx[i] == i) {
 		for (std::set<id>::iterator it = cs[i].begin(), penult = --(cs[i].end()); it != penult; ++it)
-			fprintf(csv, "%s%u ", l[*it] ? "*" : "", *it);
-		fprintf(csv, "%s%u\n", l[*(--(cs[i].end()))] ? "*" : "", *(--(cs[i].end())));
+			fprintf(solf, "%s%u ", l[*it] ? "*" : "", *it);
+		fprintf(solf, "%s%u\n", l[*(--(cs[i].end()))] ? "*" : "", *(--(cs[i].end())));
 	}
 }
 
@@ -575,13 +574,13 @@ int main(int argc, char *argv[]) {
 	cfss(st);
 	gettimeofday(&t2, NULL);
 
-	#ifdef CSVALUE
-	FILE *csv = fopen(CSVALUE, "w+");
-	if (csv) {
-		fprintf(csv, "%u\n%u\n", N, K);
-		printcsvalue(csv, sol.e, in, st->l);
-		fclose(csv);
-	} else fputs("\033[01;31m" CSVALUE " cannot be written!\033[0m\n\n", stderr);
+	#ifdef SOL
+	FILE *solf = fopen(SOL, "w+");
+	if (solf) {
+		fprintf(solf, "%u\n%u\n", N, K);
+		writesol(solf, sol.e, in, st->l);
+		fclose(solf);
+	} else fputs("\033[01;31m" SOL " cannot be written!\033[0m\n\n", stderr);
 	#endif
 	free(st);
 

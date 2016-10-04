@@ -10,9 +10,9 @@ basename="twitter/net/twitter-2010"	# Twitter files must be in "twitter/net" sub
 wg="twitter/wg"				# Place WebGraph libraries in "twitter/wg" subdir
 arg=""
 
-usage() { echo -e "Usage: $0 -t <scalefree|twitter|filename> [-n <#agents>] [-s <seed>] [-m <barabasi_m>]\n-t\tNetwork topology (either scalefree, twitter, or the input filename)\n-n\tNumber of agents (optional, default n = 10)\n-s\tSeed (optional, default s = 0)\n-m\tParameter m of the Barabasi-Albert model (optional, default m = 2)" 1>&2; exit 1; }
+usage() { echo -e "Usage: $0 -t <scalefree|twitter|filename> [-n <#agents>] [-s <seed>] [-m <barabasi_m>] [-o <out_file>]\n-t\tNetwork topology (either scalefree, twitter, or the input filename)\n-n\tNumber of agents (optional, default n = 10)\n-s\tSeed (optional, default s = 0)\n-m\tParameter m of the Barabasi-Albert model (optional, default m = 2)\n-o\tOutputs solution to file (optional)" 1>&2; exit 1; }
 
-while getopts ":t:n:s:d:m:p:" o; do
+while getopts ":t:n:s:d:m:p:o:" o; do
 	case "${o}" in
 	t)
 		t=${OPTARG}
@@ -43,6 +43,16 @@ while getopts ":t:n:s:d:m:p:" o; do
 		if ! [[ $m =~ $re ]] ; then
 			echo -e "${red}Parameter m must be a number!${nc}\n"
 			usage
+		fi
+		;;
+	o)
+		out=${OPTARG}
+		touch $out 2> /dev/null
+		rc=$?
+		if [[ $rc != 0 ]]
+		then
+			echo -e "${red}Unable to create $out${nc}"
+			exit
 		fi
 		;;
 	\?)
@@ -81,6 +91,11 @@ twitter)
 	arg=$t
 	;;
 esac
+
+if [ ! -z $out ]
+then
+	echo "#define SOL \"$out\"" >> $tmp
+fi
 
 echo "#define N $n" >> $tmp
 

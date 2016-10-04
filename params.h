@@ -24,6 +24,3 @@
 
 // Maximum number of leaders per coalition
 #define MAXLEADERS 1
-
-// Output solution to file
-#define CSVALUE "SR-VALUE/test.sol"
