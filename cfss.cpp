@@ -312,23 +312,25 @@ void scalefree(idc *a, value *v) {
 		}
 	}
 
-	id t = 0;
+	chunk t[C] = { 0 };
+	chunk t1[C] = { 0 };
 
 	for (id i = M + 1; i < N; i++) {
-		t &= ~((1ULL << i) - 1);
+		ONES(t1, i, C);
+		MASKANDNOT(t, t1, t, C);
 		for (id j = 0; j < M; j++) {
 			id d = 0;
 			for (id h = 0; h < i; h++)
-				if (!((t >> h) & 1)) d += deg[h];
+				if (!GET(t, h)) d += deg[h];
 			if (d > 0) {
 				int p = nextInt(d);
 				id q = 0;
 				while (p >= 0) {
-					if (!((t >> q) & 1)) p = p - deg[q];
+					if (!GET(t, q)) p = p - deg[q];
 					q++;
 				}
 				q--;
-				t |= 1ULL << q;
+				SET(t, q);
 				createedge(a, v, i, q, k++, RANDOMVALUE);
 				deg[i]++;
 				deg[q]++;
