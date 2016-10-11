@@ -53,6 +53,8 @@ while getopts ":t:n:s:d:m:p:o:" o; do
 		then
 			echo -e "${red}Unable to create $out${nc}"
 			exit
+		else
+			rm $out
 		fi
 		;;
 	\?)
