@@ -2,7 +2,7 @@
 #define K 5
 
 // Enable branch and bound
-//#define BOUND
+#define BOUND
 
 // Enable debug messages
 //#define DEBUG
