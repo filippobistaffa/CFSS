@@ -514,8 +514,11 @@ int main(int argc, char *argv[]) {
 		st->sing[i] = atof(pch);
 		st->val += st->sing[i];
 	}
-	for (id i = 0; i < E; i++)
+	id nr = 0;
+	for (id i = 0; i < E; i++) {
 		fscanf(f, "%u %u %f", &X(st->a, i), &Y(st->a, i), st->v + i);
+		if (st->v[i] == -FLT_MAX) nr++;
+	}
 	fclose(f);
 	#endif
 
